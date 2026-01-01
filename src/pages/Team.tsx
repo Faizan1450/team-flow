@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTeammates, useCreateTeammate, useDeleteTeammate } from '@/hooks/useTeammates';
 import { Header } from '@/components/layout/Header';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,7 +16,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Plus, Trash2, Loader2, Users } from 'lucide-react';
+import { Plus, Trash2, Loader2, Users, Briefcase, Clock } from 'lucide-react';
 
 export default function Team() {
   const { authUser, loading, isOwner } = useAuth();
@@ -33,7 +33,12 @@ export default function Team() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          </div>
+          <p className="text-sm text-muted-foreground">Loading team data...</p>
+        </div>
       </div>
     );
   }
@@ -71,61 +76,72 @@ export default function Team() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container py-6">
-        <div className="space-y-6">
+      <main className="container py-8">
+        <div className="space-y-8 animate-fade-in">
           <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <h1 className="text-2xl font-semibold tracking-tight">Team Management</h1>
-              <p className="text-muted-foreground">Add and manage your team members</p>
+            <div className="space-y-2">
+              <h1 className="text-3xl font-bold tracking-tight">Team Management</h1>
+              <p className="text-muted-foreground text-lg">Add and manage your team members</p>
             </div>
-            <Button onClick={() => setShowAdd(true)}>
+            <Button onClick={() => setShowAdd(true)} className="rounded-xl shadow-lg shadow-primary/25">
               <Plus className="mr-2 h-4 w-4" />
               Add Teammate
             </Button>
           </div>
 
           {isLoading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
+            <Card className="flex justify-center py-16 shadow-card rounded-2xl">
+              <div className="flex flex-col items-center gap-3">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">Loading teammates...</p>
+              </div>
+            </Card>
           ) : teammates.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                <Users className="h-12 w-12 mb-3 opacity-30" />
-                <p className="text-lg mb-1">No teammates yet</p>
+            <Card className="shadow-card rounded-2xl">
+              <CardContent className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                <div className="h-16 w-16 rounded-2xl bg-secondary flex items-center justify-center mb-4">
+                  <Users className="h-8 w-8 opacity-50" />
+                </div>
+                <p className="text-lg mb-1 font-medium">No teammates yet</p>
                 <p className="text-sm">Add team members to start planning capacity</p>
               </CardContent>
             </Card>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {teammates.map((tm) => (
-                <Card key={tm.id}>
-                  <CardContent className="pt-6">
+                <Card key={tm.id} className="shadow-card rounded-2xl card-hover overflow-hidden">
+                  <CardContent className="p-6">
                     <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10">
-                          <AvatarFallback className="bg-primary/10 text-primary">
+                      <div className="flex items-center gap-4">
+                        <Avatar className="h-12 w-12 ring-2 ring-border">
+                          <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground font-semibold">
                             {getInitials(tm.name)}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <div className="font-medium">{tm.name}</div>
-                          <div className="text-sm text-muted-foreground">{tm.job_role}</div>
+                          <div className="font-semibold text-lg">{tm.name}</div>
+                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                            <Briefcase className="h-3.5 w-3.5" />
+                            {tm.job_role}
+                          </div>
                         </div>
                       </div>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl"
                         onClick={() => deleteTeammate.mutate(tm.id)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                    <div className="mt-4 flex gap-2">
-                      <Badge variant="outline">{tm.daily_capacity}h/day</Badge>
+                    <div className="mt-5 flex gap-2">
+                      <Badge variant="secondary" className="rounded-lg px-3 py-1 flex items-center gap-1.5">
+                        <Clock className="h-3 w-3" />
+                        {tm.daily_capacity}h/day
+                      </Badge>
                       {tm.email && (
-                        <Badge variant="secondary" className="truncate max-w-[150px]">
+                        <Badge variant="outline" className="rounded-lg px-3 py-1 truncate max-w-[180px]">
                           {tm.email}
                         </Badge>
                       )}
@@ -138,31 +154,31 @@ export default function Team() {
         </div>
 
         <Dialog open={showAdd} onOpenChange={setShowAdd}>
-          <DialogContent>
+          <DialogContent className="rounded-2xl">
             <DialogHeader>
-              <DialogTitle>Add Teammate</DialogTitle>
+              <DialogTitle className="text-xl font-bold">Add Teammate</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
+            <div className="space-y-4 py-2">
               <div className="space-y-2">
-                <Label>Name</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="John Doe" />
+                <Label className="text-sm font-medium">Name</Label>
+                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="John Doe" className="h-11 rounded-xl" />
               </div>
               <div className="space-y-2">
-                <Label>Email (optional)</Label>
-                <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="john@example.com" />
+                <Label className="text-sm font-medium">Email (optional)</Label>
+                <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="john@example.com" className="h-11 rounded-xl" />
               </div>
               <div className="space-y-2">
-                <Label>Job Role</Label>
-                <Input value={jobRole} onChange={(e) => setJobRole(e.target.value)} placeholder="Developer" />
+                <Label className="text-sm font-medium">Job Role</Label>
+                <Input value={jobRole} onChange={(e) => setJobRole(e.target.value)} placeholder="Developer" className="h-11 rounded-xl" />
               </div>
               <div className="space-y-2">
-                <Label>Daily Capacity (hours)</Label>
-                <Input type="number" value={dailyCapacity} onChange={(e) => setDailyCapacity(e.target.value)} />
+                <Label className="text-sm font-medium">Daily Capacity (hours)</Label>
+                <Input type="number" value={dailyCapacity} onChange={(e) => setDailyCapacity(e.target.value)} className="h-11 rounded-xl" />
               </div>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowAdd(false)}>Cancel</Button>
-              <Button onClick={handleAddTeammate} disabled={!name || !jobRole || createTeammate.isPending}>
+            <DialogFooter className="gap-2">
+              <Button variant="outline" onClick={() => setShowAdd(false)} className="rounded-xl">Cancel</Button>
+              <Button onClick={handleAddTeammate} disabled={!name || !jobRole || createTeammate.isPending} className="rounded-xl shadow-lg shadow-primary/25">
                 {createTeammate.isPending ? 'Adding...' : 'Add Teammate'}
               </Button>
             </DialogFooter>
