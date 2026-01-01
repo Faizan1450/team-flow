@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { format, parseISO, addDays } from 'date-fns';
-import { useApp } from '@/contexts/AppContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useTeammates } from '@/hooks/useTeammates';
+import { useTasks, useCreateTask } from '@/hooks/useTasks';
 import {
   Dialog,
   DialogContent,
@@ -43,7 +45,10 @@ export function AddTaskModal({
   defaultTeammateId,
   defaultDate,
 }: AddTaskModalProps) {
-  const { currentUser, teammates, tasks, addTask } = useApp();
+  const { authUser } = useAuth();
+  const { data: teammates = [] } = useTeammates();
+  const { data: tasks = [] } = useTasks();
+  const createTask = useCreateTask();
   
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -76,19 +81,20 @@ export function AddTaskModal({
     }
   }, [teammateId, date, estimatedHours, teammates, tasks]);
 
-  const handleSubmit = () => {
-    if (!currentUser || !title || !teammateId || !date || !estimatedHours) return;
+  const handleSubmit = async () => {
+    if (!authUser || !title || !teammateId || !date || !estimatedHours) return;
     if (validationResult && !validationResult.allowed) return;
 
-    addTask({
+    await createTask.mutateAsync({
       title,
       description,
-      assignedTo: teammateId,
-      assignedBy: currentUser.id,
-      assignedByName: currentUser.name,
+      assigned_to: teammateId,
       date: format(date, 'yyyy-MM-dd'),
-      estimatedHours: parseFloat(estimatedHours),
+      estimated_hours: parseFloat(estimatedHours),
       status: 'pending',
+      is_self_assigned: false,
+      sort_order: 0,
+      assigned_by_name: authUser.profile?.full_name || 'Unknown'
     });
 
     handleClose();
@@ -237,10 +243,11 @@ export function AddTaskModal({
               !teammateId ||
               !date ||
               !estimatedHours ||
-              (validationResult && !validationResult.allowed)
+              (validationResult && !validationResult.allowed) ||
+              createTask.isPending
             }
           >
-            Assign Task
+            {createTask.isPending ? 'Assigning...' : 'Assign Task'}
           </Button>
         </DialogFooter>
       </DialogContent>

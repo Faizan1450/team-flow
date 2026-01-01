@@ -1,4 +1,5 @@
-import { useApp } from '@/contexts/AppContext';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -10,10 +11,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { LayoutGrid, Users, ChevronDown } from 'lucide-react';
+import { LayoutGrid, Users, Settings, LogOut } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export function Header() {
-  const { currentUser, switchRole } = useApp();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { authUser, signOut, isOwner, isLeader } = useAuth();
 
   const getInitials = (name: string) => {
     return name
@@ -21,6 +25,17 @@ export function Header() {
       .map((n) => n[0])
       .join('')
       .toUpperCase();
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
+
+  const getRoleBadge = () => {
+    if (isOwner) return <Badge>Owner</Badge>;
+    if (isLeader) return <Badge variant="secondary">Leader</Badge>;
+    return <Badge variant="outline">Teammate</Badge>;
   };
 
   return (
@@ -34,50 +49,47 @@ export function Header() {
             <span className="text-xl font-semibold tracking-tight">Capacify</span>
           </div>
           
-          {currentUser?.role === 'leader' && (
+          {(isOwner || isLeader) && (
             <nav className="hidden md:flex items-center gap-1">
-              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className={cn(
+                  "text-muted-foreground hover:text-foreground",
+                  location.pathname === '/' && "text-foreground bg-muted"
+                )}
+                onClick={() => navigate('/')}
+              >
                 <LayoutGrid className="mr-2 h-4 w-4" />
                 Dashboard
               </Button>
-              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-                <Users className="mr-2 h-4 w-4" />
-                Team
-              </Button>
+              {isOwner && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className={cn(
+                    "text-muted-foreground hover:text-foreground",
+                    location.pathname === '/team' && "text-foreground bg-muted"
+                  )}
+                  onClick={() => navigate('/team')}
+                >
+                  <Users className="mr-2 h-4 w-4" />
+                  Team
+                </Button>
+              )}
             </nav>
           )}
         </div>
 
         <div className="flex items-center gap-4">
-          {/* Role Switcher for Demo */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2">
-                <Badge variant={currentUser?.role === 'leader' ? 'default' : 'secondary'}>
-                  {currentUser?.role === 'leader' ? 'Leader' : 'Teammate'}
-                </Badge>
-                <ChevronDown className="h-3 w-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Switch View (Demo)</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => switchRole('leader')}>
-                Leader View
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => switchRole('teammate')}>
-                Teammate View
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {getRoleBadge()}
 
-          {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                 <Avatar className="h-9 w-9">
                   <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                    {currentUser ? getInitials(currentUser.name) : '?'}
+                    {authUser?.profile ? getInitials(authUser.profile.full_name) : '?'}
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -85,15 +97,20 @@ export function Header() {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium">{currentUser?.name}</p>
-                  <p className="text-xs text-muted-foreground">{currentUser?.email}</p>
+                  <p className="text-sm font-medium">{authUser?.profile?.full_name}</p>
+                  <p className="text-xs text-muted-foreground">{authUser?.email}</p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Settings</DropdownMenuItem>
-              <DropdownMenuItem>Help</DropdownMenuItem>
+              <DropdownMenuItem>
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive">Sign out</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign out
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

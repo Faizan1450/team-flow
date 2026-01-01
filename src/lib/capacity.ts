@@ -1,5 +1,5 @@
 import { Task, Teammate, DayCapacity, CapacityStatus } from '@/types';
-import { format, parseISO, getDay } from 'date-fns';
+import { parseISO, getDay } from 'date-fns';
 
 export function calculateDayCapacity(
   teammate: Teammate,
@@ -7,17 +7,17 @@ export function calculateDayCapacity(
   tasks: Task[]
 ): DayCapacity {
   const dayOfWeek = getDay(parseISO(date));
-  const isWorkingDay = teammate.workingDays.includes(dayOfWeek);
+  const isWorkingDay = teammate.working_days.includes(dayOfWeek);
   
   const dayTasks = tasks.filter(
-    (task) => task.assignedTo === teammate.id && task.date === date
+    (task) => task.assigned_to === teammate.id && task.date === date
   );
   
-  const usedCapacity = dayTasks.reduce((sum, task) => sum + task.estimatedHours, 0);
+  const usedCapacity = dayTasks.reduce((sum, task) => sum + task.estimated_hours, 0);
   
   return {
     date,
-    totalCapacity: isWorkingDay ? teammate.dailyCapacity : 0,
+    totalCapacity: isWorkingDay ? teammate.daily_capacity : 0,
     usedCapacity,
     tasks: dayTasks,
   };
