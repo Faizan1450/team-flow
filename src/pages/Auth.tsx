@@ -4,9 +4,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { LayoutGrid, Loader2 } from 'lucide-react';
 import { z } from 'zod';
 
@@ -114,37 +115,44 @@ export default function Auth() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md space-y-6">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4 relative">
+      {/* Theme toggle */}
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
+
+      <div className="w-full max-w-md space-y-8 animate-fade-in">
         {/* Logo */}
-        <div className="flex flex-col items-center space-y-2">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
-            <LayoutGrid className="h-6 w-6 text-primary-foreground" />
+        <div className="flex flex-col items-center space-y-4">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary shadow-xl shadow-primary/25">
+            <LayoutGrid className="h-7 w-7 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">Capacify</h1>
-          <p className="text-muted-foreground text-center">
-            Team capacity planning made simple
-          </p>
+          <div className="text-center">
+            <h1 className="text-3xl font-bold tracking-tight">Capacify</h1>
+            <p className="text-muted-foreground mt-2">
+              Team capacity planning made simple
+            </p>
+          </div>
         </div>
 
-        <Card>
+        <Card className="shadow-elevated border-border/50 rounded-2xl overflow-hidden">
           <Tabs defaultValue="login" className="w-full">
-            <CardHeader className="pb-4">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Sign In</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            <CardHeader className="pb-4 pt-6 px-6">
+              <TabsList className="grid w-full grid-cols-2 h-11 rounded-xl bg-secondary p-1">
+                <TabsTrigger value="login" className="rounded-lg font-medium">Sign In</TabsTrigger>
+                <TabsTrigger value="signup" className="rounded-lg font-medium">Sign Up</TabsTrigger>
               </TabsList>
             </CardHeader>
             
-            <CardContent>
+            <CardContent className="px-6 pb-6">
               {error && (
-                <Alert variant="destructive" className="mb-4">
+                <Alert variant="destructive" className="mb-4 rounded-xl">
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
               
               {success && (
-                <Alert className="mb-4 border-capacity-low bg-capacity-low/10">
+                <Alert className="mb-4 border-capacity-low/30 bg-capacity-low/10 rounded-xl">
                   <AlertDescription className="text-capacity-low">{success}</AlertDescription>
                 </Alert>
               )}
@@ -152,7 +160,7 @@ export default function Auth() {
               <TabsContent value="login" className="mt-0">
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
+                    <Label htmlFor="login-email" className="text-sm font-medium">Email</Label>
                     <Input
                       id="login-email"
                       type="email"
@@ -161,10 +169,11 @@ export default function Auth() {
                       onChange={(e) => setLoginEmail(e.target.value)}
                       disabled={isLoading}
                       required
+                      className="h-11 rounded-xl"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="login-password">Password</Label>
+                    <Label htmlFor="login-password" className="text-sm font-medium">Password</Label>
                     <Input
                       id="login-password"
                       type="password"
@@ -173,9 +182,10 @@ export default function Auth() {
                       onChange={(e) => setLoginPassword(e.target.value)}
                       disabled={isLoading}
                       required
+                      className="h-11 rounded-xl"
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
+                  <Button type="submit" className="w-full h-11 rounded-xl font-semibold shadow-lg shadow-primary/25" disabled={isLoading}>
                     {isLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -191,31 +201,33 @@ export default function Auth() {
               <TabsContent value="signup" className="mt-0">
                 <form onSubmit={handleSignup} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-name">Full Name</Label>
+                    <Label htmlFor="signup-name" className="text-sm font-medium">Full Name</Label>
                     <Input
                       id="signup-name"
                       type="text"
-                      placeholder="Syed Faizan Ali"
+                      placeholder="John Doe"
                       value={signupFullName}
                       onChange={(e) => setSignupFullName(e.target.value)}
                       disabled={isLoading}
                       required
+                      className="h-11 rounded-xl"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-username">Username</Label>
+                    <Label htmlFor="signup-username" className="text-sm font-medium">Username</Label>
                     <Input
                       id="signup-username"
                       type="text"
-                      placeholder="faizan1450"
+                      placeholder="johndoe"
                       value={signupUsername}
                       onChange={(e) => setSignupUsername(e.target.value)}
                       disabled={isLoading}
                       required
+                      className="h-11 rounded-xl"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
+                    <Label htmlFor="signup-email" className="text-sm font-medium">Email</Label>
                     <Input
                       id="signup-email"
                       type="email"
@@ -224,10 +236,11 @@ export default function Auth() {
                       onChange={(e) => setSignupEmail(e.target.value)}
                       disabled={isLoading}
                       required
+                      className="h-11 rounded-xl"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
+                    <Label htmlFor="signup-password" className="text-sm font-medium">Password</Label>
                     <Input
                       id="signup-password"
                       type="password"
@@ -236,9 +249,10 @@ export default function Auth() {
                       onChange={(e) => setSignupPassword(e.target.value)}
                       disabled={isLoading}
                       required
+                      className="h-11 rounded-xl"
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
+                  <Button type="submit" className="w-full h-11 rounded-xl font-semibold shadow-lg shadow-primary/25" disabled={isLoading}>
                     {isLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />

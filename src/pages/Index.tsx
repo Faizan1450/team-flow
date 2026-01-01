@@ -11,7 +11,12 @@ const Index = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          </div>
+          <p className="text-sm text-muted-foreground">Loading your workspace...</p>
+        </div>
       </div>
     );
   }
@@ -23,12 +28,12 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container py-6">
+      <main className="container py-8">
         {isOwner || isLeader ? (
-          <div className="space-y-6">
-            <div className="space-y-1">
-              <h1 className="text-2xl font-semibold tracking-tight">Team Capacity</h1>
-              <p className="text-muted-foreground">
+          <div className="space-y-8 animate-fade-in">
+            <div className="space-y-2">
+              <h1 className="text-3xl font-bold tracking-tight">Team Capacity</h1>
+              <p className="text-muted-foreground text-lg">
                 View and manage your team's workload across the next 14 days
               </p>
             </div>
@@ -38,8 +43,10 @@ const Index = () => {
           <TeammateView />
         ) : (
           <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
-            <p className="text-lg mb-2">No role assigned</p>
-            <p className="text-sm">Contact the owner to get access to the system</p>
+            <div className="bg-card rounded-2xl shadow-card p-8 text-center">
+              <p className="text-lg mb-2 font-medium">No role assigned</p>
+              <p className="text-sm">Contact the owner to get access to the system</p>
+            </div>
           </div>
         )}
       </main>
