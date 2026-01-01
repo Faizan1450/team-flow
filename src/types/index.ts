@@ -1,34 +1,49 @@
-export type Role = 'leader' | 'teammate';
+export type AppRole = 'owner' | 'leader' | 'teammate';
 
-export interface User {
+export interface Profile {
   id: string;
-  name: string;
-  email: string;
-  role: Role;
-  avatar?: string;
+  username: string;
+  full_name: string;
+  avatar_url?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserRole {
+  id: string;
+  user_id: string;
+  role: AppRole;
+  created_at: string;
 }
 
 export interface Teammate {
   id: string;
+  user_id?: string;
   name: string;
-  email: string;
-  role: string; // Job role like "Developer", "Designer"
-  dailyCapacity: number; // hours per day
-  workingDays: number[]; // 0 = Sunday, 1 = Monday, etc.
-  avatar?: string;
+  email?: string;
+  job_role: string;
+  daily_capacity: number;
+  working_days: number[];
+  avatar_url?: string;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Task {
   id: string;
   title: string;
   description?: string;
-  assignedTo: string; // teammate id
-  assignedBy: string; // leader id
-  assignedByName: string;
-  date: string; // ISO date string YYYY-MM-DD
-  estimatedHours: number;
+  assigned_to: string;
+  assigned_by?: string;
+  assigned_by_name: string;
+  date: string;
+  estimated_hours: number;
   status: 'pending' | 'in-progress' | 'completed';
-  createdAt: string;
+  is_self_assigned: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface DayCapacity {
@@ -45,4 +60,12 @@ export interface CellData {
   date: string;
   capacity: DayCapacity;
   status: CapacityStatus;
+}
+
+// Auth context types
+export interface AuthUser {
+  id: string;
+  email: string;
+  profile?: Profile;
+  roles: AppRole[];
 }

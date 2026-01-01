@@ -1,19 +1,21 @@
 import { useMemo, useState } from 'react';
-import { format, addDays, isToday, isSameDay } from 'date-fns';
-import { useApp } from '@/contexts/AppContext';
+import { format, addDays, isToday } from 'date-fns';
+import { useTeammates } from '@/hooks/useTeammates';
+import { useTasks } from '@/hooks/useTasks';
 import { CapacityCell } from './CapacityCell';
 import { TaskDetailsModal } from './TaskDetailsModal';
 import { AddTaskModal } from './AddTaskModal';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { calculateDayCapacity, getCapacityStatus } from '@/lib/capacity';
 import { cn } from '@/lib/utils';
 
 const VISIBLE_DAYS = 14;
 
 export function CapacityGrid() {
-  const { teammates, tasks } = useApp();
+  const { data: teammates = [], isLoading: loadingTeammates } = useTeammates();
+  const { data: tasks = [], isLoading: loadingTasks } = useTasks();
   const [startDate, setStartDate] = useState(new Date());
   const [selectedCell, setSelectedCell] = useState<{
     teammateId: string;
@@ -50,6 +52,23 @@ export function CapacityGrid() {
   const navigateDays = (direction: 'prev' | 'next') => {
     setStartDate((prev) => addDays(prev, direction === 'next' ? 7 : -7));
   };
+
+  if (loadingTeammates || loadingTasks) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (teammates.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+        <p className="text-lg mb-2">No teammates yet</p>
+        <p className="text-sm">Add teammates from the Team page to start planning capacity</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -126,7 +145,7 @@ export function CapacityGrid() {
                   <div className="min-w-0">
                     <div className="text-sm font-medium truncate">{teammate.name}</div>
                     <div className="text-xs text-muted-foreground truncate">
-                      {teammate.role} · {teammate.dailyCapacity}h/day
+                      {teammate.job_role} · {teammate.daily_capacity}h/day
                     </div>
                   </div>
                 </div>
