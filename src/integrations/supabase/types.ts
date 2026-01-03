@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      pending_registrations: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -200,6 +236,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_registration: {
+        Args: {
+          _daily_capacity?: number
+          _pending_id: string
+          _role: Database["public"]["Enums"]["app_role"]
+          _working_days?: number[]
+        }
+        Returns: undefined
+      }
       get_teammate_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
@@ -209,6 +254,7 @@ export type Database = {
         Returns: boolean
       }
       is_owner_or_leader: { Args: { _user_id: string }; Returns: boolean }
+      reject_registration: { Args: { _pending_id: string }; Returns: undefined }
     }
     Enums: {
       app_role: "owner" | "leader" | "teammate"
