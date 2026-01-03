@@ -14,14 +14,16 @@ import { Plus, ChevronLeft, ChevronRight, Loader2, Calendar } from 'lucide-react
 import { calculateDayCapacity, getCapacityStatus } from '@/lib/capacity';
 import { cn } from '@/lib/utils';
 
-const VISIBLE_DAYS = 14;
+const DAYS_BEFORE = 2;
+const DAYS_AFTER = 5;
+const VISIBLE_DAYS = DAYS_BEFORE + DAYS_AFTER + 1; // 2 previous + today + 5 future = 8 days
 
 export function CapacityGrid() {
   const { data: allTeammates = [], isLoading: loadingTeammates } = useTeammates();
   const { data: tasks = [], isLoading: loadingTasks } = useTasks();
   const { data: timeOffDays = [] } = useTimeOff();
   const { data: usersWithRoles = [] } = useAllUsersWithRoles();
-  const [startDate, setStartDate] = useState(new Date());
+  const [startDate, setStartDate] = useState(() => addDays(new Date(), -DAYS_BEFORE));
   const [selectedCell, setSelectedCell] = useState<{
     teammateId: string;
     date: string;
@@ -131,7 +133,7 @@ export function CapacityGrid() {
         <div className="overflow-x-auto">
           <div className="min-w-max">
             {/* Date Headers */}
-            <div className="grid grid-cols-[220px_repeat(14,1fr)] border-b border-border bg-secondary/50">
+            <div className="grid border-b border-border bg-secondary/50" style={{ gridTemplateColumns: `220px repeat(${VISIBLE_DAYS}, 1fr)` }}>
               <div className="p-4 font-semibold text-sm text-muted-foreground">
                 Team Member
               </div>
@@ -161,9 +163,10 @@ export function CapacityGrid() {
               <div
                 key={teammate.id}
                 className={cn(
-                  "grid grid-cols-[220px_repeat(14,1fr)] border-b border-border/50 last:border-b-0 transition-colors",
+                  "grid border-b border-border/50 last:border-b-0 transition-colors",
                   "hover:bg-secondary/30"
                 )}
+                style={{ gridTemplateColumns: `220px repeat(${VISIBLE_DAYS}, 1fr)` }}
               >
                 {/* Teammate Info */}
                 <div className="p-4 flex items-center gap-3">
