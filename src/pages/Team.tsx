@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTeammates, useCreateTeammate, useDeleteTeammate } from '@/hooks/useTeammates';
 import { Header } from '@/components/layout/Header';
+import { ManageOffDaysModal } from '@/components/team/ManageOffDaysModal';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +17,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Plus, Trash2, Loader2, Users, Briefcase, Clock } from 'lucide-react';
+import { Plus, Trash2, Loader2, Users, Briefcase, Clock, CalendarOff } from 'lucide-react';
 
 export default function Team() {
   const { authUser, loading, isOwner } = useAuth();
@@ -29,6 +30,12 @@ export default function Team() {
   const [email, setEmail] = useState('');
   const [jobRole, setJobRole] = useState('');
   const [dailyCapacity, setDailyCapacity] = useState('8');
+  
+  const [offDaysModal, setOffDaysModal] = useState<{
+    open: boolean;
+    teammateId: string;
+    teammateName: string;
+  } | null>(null);
 
   if (loading) {
     return (
@@ -135,7 +142,7 @@ export default function Team() {
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                    <div className="mt-5 flex gap-2">
+                    <div className="mt-5 flex flex-wrap gap-2">
                       <Badge variant="secondary" className="rounded-lg px-3 py-1 flex items-center gap-1.5">
                         <Clock className="h-3 w-3" />
                         {tm.daily_capacity}h/day
@@ -145,6 +152,21 @@ export default function Team() {
                           {tm.email}
                         </Badge>
                       )}
+                    </div>
+                    <div className="mt-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full rounded-xl"
+                        onClick={() => setOffDaysModal({
+                          open: true,
+                          teammateId: tm.id,
+                          teammateName: tm.name,
+                        })}
+                      >
+                        <CalendarOff className="mr-2 h-4 w-4" />
+                        Manage Off Days
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -184,6 +206,15 @@ export default function Team() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {offDaysModal && (
+          <ManageOffDaysModal
+            open={offDaysModal.open}
+            onClose={() => setOffDaysModal(null)}
+            teammateId={offDaysModal.teammateId}
+            teammateName={offDaysModal.teammateName}
+          />
+        )}
       </main>
     </div>
   );

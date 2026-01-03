@@ -65,18 +65,32 @@ export function Header() {
                 Dashboard
               </Button>
               {isOwner && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className={cn(
-                    "text-muted-foreground hover:text-foreground rounded-lg px-4",
-                    location.pathname === '/team' && "text-foreground bg-secondary font-medium"
-                  )}
-                  onClick={() => navigate('/team')}
-                >
-                  <Users className="mr-2 h-4 w-4" />
-                  Team
-                </Button>
+                <>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className={cn(
+                      "text-muted-foreground hover:text-foreground rounded-lg px-4",
+                      location.pathname === '/team' && "text-foreground bg-secondary font-medium"
+                    )}
+                    onClick={() => navigate('/team')}
+                  >
+                    <Users className="mr-2 h-4 w-4" />
+                    Team
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className={cn(
+                      "text-muted-foreground hover:text-foreground rounded-lg px-4",
+                      location.pathname === '/users' && "text-foreground bg-secondary font-medium"
+                    )}
+                    onClick={() => navigate('/users')}
+                  >
+                    <Settings className="mr-2 h-4 w-4" />
+                    Users
+                  </Button>
+                </>
               )}
             </nav>
           )}
