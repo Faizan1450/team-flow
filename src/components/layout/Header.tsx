@@ -1,5 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePendingRegistrations } from '@/hooks/usePendingRegistrations';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -12,13 +13,15 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { LayoutGrid, Users, Settings, LogOut } from 'lucide-react';
+import { LayoutGrid, Users, Settings, LogOut, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function Header() {
   const navigate = useNavigate();
   const location = useLocation();
   const { authUser, signOut, isOwner, isLeader } = useAuth();
+  const { data: pendingRegistrations = [] } = usePendingRegistrations();
+  const pendingCount = pendingRegistrations.length;
 
   const getInitials = (name: string) => {
     return name
@@ -82,13 +85,18 @@ export function Header() {
                     variant="ghost" 
                     size="sm" 
                     className={cn(
-                      "text-muted-foreground hover:text-foreground rounded-lg px-4",
+                      "text-muted-foreground hover:text-foreground rounded-lg px-4 relative",
                       location.pathname === '/users' && "text-foreground bg-secondary font-medium"
                     )}
                     onClick={() => navigate('/users')}
                   >
-                    <Settings className="mr-2 h-4 w-4" />
+                    <Bell className="mr-2 h-4 w-4" />
                     Users
+                    {pendingCount > 0 && (
+                      <span className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs font-bold">
+                        {pendingCount}
+                      </span>
+                    )}
                   </Button>
                 </>
               )}
