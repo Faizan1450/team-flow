@@ -139,6 +139,41 @@ export type Database = {
         }
         Relationships: []
       }
+      time_off: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          date: string
+          id: string
+          reason: string | null
+          teammate_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          date: string
+          id?: string
+          reason?: string | null
+          teammate_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          id?: string
+          reason?: string | null
+          teammate_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_off_teammate_id_fkey"
+            columns: ["teammate_id"]
+            isOneToOne: false
+            referencedRelation: "teammates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string

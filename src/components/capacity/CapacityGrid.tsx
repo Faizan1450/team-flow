@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react';
 import { format, addDays, isToday } from 'date-fns';
 import { useTeammates } from '@/hooks/useTeammates';
 import { useTasks } from '@/hooks/useTasks';
+import { useTimeOff } from '@/hooks/useTimeOff';
+import { useAllUsersWithRoles } from '@/hooks/useUserRoles';
 import { CapacityCell } from './CapacityCell';
 import { TaskDetailsModal } from './TaskDetailsModal';
 import { AddTaskModal } from './AddTaskModal';
@@ -15,8 +17,10 @@ import { cn } from '@/lib/utils';
 const VISIBLE_DAYS = 14;
 
 export function CapacityGrid() {
-  const { data: teammates = [], isLoading: loadingTeammates } = useTeammates();
+  const { data: allTeammates = [], isLoading: loadingTeammates } = useTeammates();
   const { data: tasks = [], isLoading: loadingTasks } = useTasks();
+  const { data: timeOffDays = [] } = useTimeOff();
+  const { data: usersWithRoles = [] } = useAllUsersWithRoles();
   const [startDate, setStartDate] = useState(new Date());
   const [selectedCell, setSelectedCell] = useState<{
     teammateId: string;
@@ -27,6 +31,15 @@ export function CapacityGrid() {
     teammateId?: string;
     date?: string;
   }>({});
+
+  // Filter out teammates who are leaders (they shouldn't appear in capacity grid)
+  const teammates = useMemo(() => {
+    const leaderUserIds = usersWithRoles
+      .filter(ur => ur.role === 'leader')
+      .map(ur => ur.user_id);
+    
+    return allTeammates.filter(tm => !tm.user_id || !leaderUserIds.includes(tm.user_id));
+  }, [allTeammates, usersWithRoles]);
 
   const dates = useMemo(() => {
     return Array.from({ length: VISIBLE_DAYS }, (_, i) => addDays(startDate, i));
@@ -170,7 +183,7 @@ export function CapacityGrid() {
                 {/* Capacity Cells */}
                 {dates.map((date) => {
                   const dateStr = format(date, 'yyyy-MM-dd');
-                  const capacity = calculateDayCapacity(teammate, dateStr, tasks);
+                  const capacity = calculateDayCapacity(teammate, dateStr, tasks, timeOffDays);
                   const status = getCapacityStatus(capacity);
 
                   return (

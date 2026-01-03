@@ -1,13 +1,20 @@
 import { Task, Teammate, DayCapacity, CapacityStatus } from '@/types';
 import { parseISO, getDay } from 'date-fns';
+import { TimeOff } from '@/hooks/useTimeOff';
 
 export function calculateDayCapacity(
   teammate: Teammate,
   date: string,
-  tasks: Task[]
+  tasks: Task[],
+  timeOffDays?: TimeOff[]
 ): DayCapacity {
   const dayOfWeek = getDay(parseISO(date));
   const isWorkingDay = teammate.working_days.includes(dayOfWeek);
+  
+  // Check if this is a manual off day
+  const hasTimeOff = timeOffDays?.some(
+    (to) => to.teammate_id === teammate.id && to.date === date
+  );
   
   const dayTasks = tasks.filter(
     (task) => task.assigned_to === teammate.id && task.date === date
@@ -17,7 +24,7 @@ export function calculateDayCapacity(
   
   return {
     date,
-    totalCapacity: isWorkingDay ? teammate.daily_capacity : 0,
+    totalCapacity: isWorkingDay && !hasTimeOff ? teammate.daily_capacity : 0,
     usedCapacity,
     tasks: dayTasks,
   };

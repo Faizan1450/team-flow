@@ -4,6 +4,12 @@ import { AppRole, UserRole, Profile } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
+interface UserWithRoles {
+  user_id: string;
+  roles: AppRole[];
+  profile?: Profile;
+}
+
 interface UserWithRole {
   user_id: string;
   role: AppRole;
@@ -16,6 +22,13 @@ export function useAllUsersWithRoles() {
   return useQuery({
     queryKey: ['users-with-roles'],
     queryFn: async () => {
+      // Get all profiles (all registered users)
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('*');
+      
+      if (profilesError) throw profilesError;
+
       // Get all user roles
       const { data: roles, error: rolesError } = await supabase
         .from('user_roles')
@@ -23,21 +36,48 @@ export function useAllUsersWithRoles() {
       
       if (rolesError) throw rolesError;
 
-      // Get all profiles
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*');
+      // Group roles by user and include profile
+      const usersMap = new Map<string, UserWithRoles>();
       
-      if (profilesError) throw profilesError;
+      // First add all profiles
+      (profiles as Profile[]).forEach(profile => {
+        usersMap.set(profile.id, {
+          user_id: profile.id,
+          roles: [],
+          profile,
+        });
+      });
+      
+      // Then add roles to each user
+      (roles as UserRole[]).forEach(role => {
+        const user = usersMap.get(role.user_id);
+        if (user) {
+          user.roles.push(role.role);
+        }
+      });
 
-      // Combine roles with profiles
-      const usersWithRoles: UserWithRole[] = (roles as UserRole[]).map(role => ({
-        user_id: role.user_id,
-        role: role.role,
-        profile: (profiles as Profile[]).find(p => p.id === role.user_id)
-      }));
+      // Convert to array and flatten - one entry per role per user
+      // Users without roles get 'teammate' as default display
+      const result: UserWithRole[] = [];
+      usersMap.forEach(user => {
+        if (user.roles.length === 0) {
+          result.push({
+            user_id: user.user_id,
+            role: 'teammate',
+            profile: user.profile,
+          });
+        } else {
+          user.roles.forEach(role => {
+            result.push({
+              user_id: user.user_id,
+              role,
+              profile: user.profile,
+            });
+          });
+        }
+      });
 
-      return usersWithRoles;
+      return result;
     },
     enabled: isOwner
   });
