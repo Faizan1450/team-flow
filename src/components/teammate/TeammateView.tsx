@@ -152,7 +152,7 @@ export function TeammateView() {
 
   const handleAddSelfTask = async () => {
     if (!myProfile || !newTaskTitle || !newTaskHours) return;
-    await createTask.mutateAsync({ title: newTaskTitle, description: newTaskDescription, assigned_to: myProfile.id, date: selectedDateStr, estimated_hours: parseFloat(newTaskHours), status: 'pending', is_self_assigned: true, sort_order: tasksForSelectedDay.length, assigned_by_name: authUser?.profile?.full_name || 'Self' });
+    await createTask.mutateAsync({ title: newTaskTitle, description: newTaskDescription, assigned_to: myProfile.id, date: selectedDateStr, estimated_hours: parseFloat(newTaskHours), status: 'pending', is_self_assigned: true, is_recurring: false, sort_order: tasksForSelectedDay.length, assigned_by_name: authUser?.profile?.full_name || 'Self' });
     setNewTaskTitle(''); setNewTaskDescription(''); setNewTaskHours(''); setShowAddTask(false);
   };
 

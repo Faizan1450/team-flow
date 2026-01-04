@@ -3,6 +3,8 @@ import { format, parseISO, addDays } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTeammates } from '@/hooks/useTeammates';
 import { useTasks, useCreateTask } from '@/hooks/useTasks';
+import { useCreateRecurringTask } from '@/hooks/useRecurringTasks';
+import { RecurrenceType } from '@/types';
 import {
   Dialog,
   DialogContent,
@@ -14,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -28,7 +31,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CalendarIcon, AlertTriangle, CheckCircle } from 'lucide-react';
+import { CalendarIcon, AlertTriangle, CheckCircle, Repeat } from 'lucide-react';
 import { calculateDayCapacity, canAssignTask, getRemainingCapacity } from '@/lib/capacity';
 import { cn } from '@/lib/utils';
 
@@ -49,6 +52,7 @@ export function AddTaskModal({
   const { data: teammates = [] } = useTeammates();
   const { data: tasks = [] } = useTasks();
   const createTask = useCreateTask();
+  const createRecurringTask = useCreateRecurringTask();
   
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -57,6 +61,11 @@ export function AddTaskModal({
     defaultDate ? parseISO(defaultDate) : new Date()
   );
   const [estimatedHours, setEstimatedHours] = useState('');
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>('daily');
+  const [recurrenceInterval, setRecurrenceInterval] = useState('1');
+  const [recurrenceEndDate, setRecurrenceEndDate] = useState<Date | undefined>();
+  const [customDates, setCustomDates] = useState<Date[]>([]);
   const [validationResult, setValidationResult] = useState<{
     allowed: boolean;
     warning?: string;
@@ -85,17 +94,34 @@ export function AddTaskModal({
     if (!authUser || !title || !teammateId || !date || !estimatedHours) return;
     if (validationResult && !validationResult.allowed) return;
 
-    await createTask.mutateAsync({
-      title,
-      description,
-      assigned_to: teammateId,
-      date: format(date, 'yyyy-MM-dd'),
-      estimated_hours: parseFloat(estimatedHours),
-      status: 'pending',
-      is_self_assigned: false,
-      sort_order: 0,
-      assigned_by_name: authUser.profile?.full_name || 'Unknown'
-    });
+    if (isRecurring) {
+      await createRecurringTask.mutateAsync({
+        title,
+        description,
+        assigned_to: teammateId,
+        start_date: format(date, 'yyyy-MM-dd'),
+        estimated_hours: parseFloat(estimatedHours),
+        is_self_assigned: false,
+        assigned_by_name: authUser.profile?.full_name || 'Unknown',
+        recurrence_type: recurrenceType,
+        recurrence_interval: parseInt(recurrenceInterval) || 1,
+        recurrence_end_date: recurrenceEndDate ? format(recurrenceEndDate, 'yyyy-MM-dd') : undefined,
+        recurrence_dates: customDates.map(d => format(d, 'yyyy-MM-dd')),
+      });
+    } else {
+      await createTask.mutateAsync({
+        title,
+        description,
+        assigned_to: teammateId,
+        date: format(date, 'yyyy-MM-dd'),
+        estimated_hours: parseFloat(estimatedHours),
+        status: 'pending',
+        is_self_assigned: false,
+        is_recurring: false,
+        sort_order: 0,
+        assigned_by_name: authUser.profile?.full_name || 'Unknown'
+      });
+    }
 
     handleClose();
   };
@@ -106,6 +132,11 @@ export function AddTaskModal({
     setTeammateId('');
     setDate(new Date());
     setEstimatedHours('');
+    setIsRecurring(false);
+    setRecurrenceType('daily');
+    setRecurrenceInterval('1');
+    setRecurrenceEndDate(undefined);
+    setCustomDates([]);
     setValidationResult(null);
     onClose();
   };
@@ -211,6 +242,126 @@ export function AddTaskModal({
             </div>
           </div>
 
+          {/* Recurring Task Section */}
+          <div className="space-y-4 border-t pt-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Repeat className="h-4 w-4 text-muted-foreground" />
+                <Label htmlFor="recurring">Recurring Task</Label>
+              </div>
+              <Switch
+                id="recurring"
+                checked={isRecurring}
+                onCheckedChange={setIsRecurring}
+              />
+            </div>
+
+            {isRecurring && (
+              <div className="space-y-4 pl-6 animate-in fade-in slide-in-from-top-2">
+                <div className="space-y-2">
+                  <Label>Recurrence Pattern</Label>
+                  <Select value={recurrenceType} onValueChange={(v) => setRecurrenceType(v as RecurrenceType)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="daily">Daily</SelectItem>
+                      <SelectItem value="custom">Custom Dates</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {recurrenceType === 'daily' && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Repeat every</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          min="1"
+                          max="30"
+                          value={recurrenceInterval}
+                          onChange={(e) => setRecurrenceInterval(e.target.value)}
+                          className="w-20"
+                        />
+                        <span className="text-sm text-muted-foreground">day(s)</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>End Date</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              'w-full justify-start text-left font-normal',
+                              !recurrenceEndDate && 'text-muted-foreground'
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {recurrenceEndDate ? format(recurrenceEndDate, 'MMM d, yyyy') : 'Select end date'}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={recurrenceEndDate}
+                            onSelect={setRecurrenceEndDate}
+                            disabled={(d) => d <= (date || new Date())}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </>
+                )}
+
+                {recurrenceType === 'custom' && (
+                  <div className="space-y-2">
+                    <Label>Select Dates ({customDates.length} selected)</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start text-left font-normal"
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {customDates.length > 0
+                            ? `${customDates.length} date${customDates.length > 1 ? 's' : ''} selected`
+                            : 'Pick dates'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="multiple"
+                          selected={customDates}
+                          onSelect={(dates) => setCustomDates(dates || [])}
+                          disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    {customDates.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {customDates.slice(0, 5).map((d) => (
+                          <span key={d.toISOString()} className="text-xs bg-muted px-2 py-1 rounded">
+                            {format(d, 'MMM d')}
+                          </span>
+                        ))}
+                        {customDates.length > 5 && (
+                          <span className="text-xs bg-muted px-2 py-1 rounded">
+                            +{customDates.length - 5} more
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           {validationResult?.warning && (
             <Alert variant={validationResult.allowed ? 'default' : 'destructive'}>
               {validationResult.allowed ? (
@@ -222,7 +373,7 @@ export function AddTaskModal({
             </Alert>
           )}
 
-          {validationResult?.allowed && !validationResult?.warning && estimatedHours && (
+          {validationResult?.allowed && !validationResult?.warning && estimatedHours && !isRecurring && (
             <Alert className="border-capacity-low/50 bg-capacity-low/10">
               <CheckCircle className="h-4 w-4 text-capacity-low" />
               <AlertDescription className="text-capacity-low">
@@ -244,10 +395,17 @@ export function AddTaskModal({
               !date ||
               !estimatedHours ||
               (validationResult && !validationResult.allowed) ||
-              createTask.isPending
+              (isRecurring && recurrenceType === 'daily' && !recurrenceEndDate) ||
+              (isRecurring && recurrenceType === 'custom' && customDates.length === 0) ||
+              createTask.isPending ||
+              createRecurringTask.isPending
             }
           >
-            {createTask.isPending ? 'Assigning...' : 'Assign Task'}
+            {createTask.isPending || createRecurringTask.isPending 
+              ? 'Assigning...' 
+              : isRecurring 
+                ? 'Create Recurring Task' 
+                : 'Assign Task'}
           </Button>
         </DialogFooter>
       </DialogContent>
