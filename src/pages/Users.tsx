@@ -174,34 +174,36 @@ export default function UsersPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container py-8">
-        <div className="space-y-8 animate-fade-in">
-          <div className="space-y-2">
-            <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
-            <p className="text-muted-foreground text-lg">Manage registrations and user roles</p>
+      <main className="container px-4 md:px-8 py-4 md:py-8">
+        <div className="space-y-4 md:space-y-8 animate-fade-in">
+          <div className="space-y-1 md:space-y-2">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">User Management</h1>
+            <p className="text-muted-foreground text-sm md:text-lg">Manage registrations and user roles</p>
           </div>
 
-          <Tabs defaultValue={pendingCount > 0 ? 'pending' : 'approved'} className="space-y-6">
-            <TabsList className="h-12 rounded-xl bg-secondary p-1">
-              <TabsTrigger value="pending" className="rounded-lg px-6 data-[state=active]:shadow-md relative">
-                <UserPlus className="mr-2 h-4 w-4" />
-                Pending
+          <Tabs defaultValue={pendingCount > 0 ? 'pending' : 'approved'} className="space-y-4 md:space-y-6">
+            <TabsList className="h-10 md:h-12 rounded-xl bg-secondary p-1 w-full sm:w-auto">
+              <TabsTrigger value="pending" className="rounded-lg px-3 md:px-6 data-[state=active]:shadow-md relative text-xs md:text-sm flex-1 sm:flex-none">
+                <UserPlus className="mr-1 md:mr-2 h-3.5 w-3.5 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Pending</span>
+                <span className="sm:hidden">Pending</span>
                 {pendingCount > 0 && (
-                  <Badge className="ml-2 h-5 w-5 p-0 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs">
+                  <Badge className="ml-1 md:ml-2 h-4 w-4 md:h-5 md:w-5 p-0 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] md:text-xs">
                     {pendingCount}
                   </Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="approved" className="rounded-lg px-6 data-[state=active]:shadow-md">
-                <Users className="mr-2 h-4 w-4" />
-                All Users
+              <TabsTrigger value="approved" className="rounded-lg px-3 md:px-6 data-[state=active]:shadow-md text-xs md:text-sm flex-1 sm:flex-none">
+                <Users className="mr-1 md:mr-2 h-3.5 w-3.5 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">All Users</span>
+                <span className="sm:hidden">Users</span>
               </TabsTrigger>
             </TabsList>
 
             {/* Pending Registrations Tab */}
             <TabsContent value="pending">
               {loadingPending ? (
-                <Card className="flex justify-center py-16 shadow-card rounded-2xl">
+                <Card className="flex justify-center py-12 md:py-16 shadow-card rounded-2xl">
                   <div className="flex flex-col items-center gap-3">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     <p className="text-sm text-muted-foreground">Loading pending registrations...</p>
@@ -209,48 +211,48 @@ export default function UsersPage() {
                 </Card>
               ) : pendingRegistrations.length === 0 ? (
                 <Card className="shadow-card rounded-2xl">
-                  <CardContent className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-                    <div className="h-16 w-16 rounded-2xl bg-secondary flex items-center justify-center mb-4">
-                      <Clock className="h-8 w-8 opacity-50" />
+                  <CardContent className="flex flex-col items-center justify-center py-12 md:py-16 text-muted-foreground">
+                    <div className="h-12 w-12 md:h-16 md:w-16 rounded-2xl bg-secondary flex items-center justify-center mb-3 md:mb-4">
+                      <Clock className="h-6 w-6 md:h-8 md:w-8 opacity-50" />
                     </div>
-                    <p className="text-lg mb-1 font-medium">No pending registrations</p>
-                    <p className="text-sm">New user registrations will appear here for approval</p>
+                    <p className="text-base md:text-lg mb-1 font-medium">No pending registrations</p>
+                    <p className="text-xs md:text-sm text-center">New user registrations will appear here for approval</p>
                   </CardContent>
                 </Card>
               ) : (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {pendingRegistrations.map((reg) => (
                     <Card key={reg.id} className="shadow-card rounded-2xl card-hover overflow-hidden border-l-4 border-l-warning">
-                      <CardContent className="p-6">
-                        <div className="flex items-start gap-4">
-                          <Avatar className="h-12 w-12 ring-2 ring-border">
-                            <AvatarFallback className="bg-gradient-to-br from-warning to-warning/60 text-warning-foreground font-semibold">
+                      <CardContent className="p-4 md:p-6">
+                        <div className="flex items-start gap-3 md:gap-4">
+                          <Avatar className="h-10 w-10 md:h-12 md:w-12 ring-2 ring-border shrink-0">
+                            <AvatarFallback className="bg-gradient-to-br from-warning to-warning/60 text-warning-foreground font-semibold text-sm md:text-base">
                               {getInitials(reg.full_name)}
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-lg truncate">{reg.full_name}</div>
-                            <div className="text-sm text-muted-foreground truncate">@{reg.username}</div>
-                            <div className="text-xs text-muted-foreground truncate">{reg.email}</div>
+                            <div className="font-semibold text-base md:text-lg truncate">{reg.full_name}</div>
+                            <div className="text-xs md:text-sm text-muted-foreground truncate">@{reg.username}</div>
+                            <div className="text-[10px] md:text-xs text-muted-foreground truncate">{reg.email}</div>
                           </div>
                         </div>
-                        <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
+                        <div className="mt-3 md:mt-4 flex items-center gap-2 text-[10px] md:text-xs text-muted-foreground">
                           <Clock className="h-3 w-3" />
                           Registered {format(new Date(reg.created_at), 'MMM d, yyyy')}
                         </div>
-                        <div className="mt-4 flex gap-2">
+                        <div className="mt-3 md:mt-4 flex gap-2">
                           <Button
                             size="sm"
-                            className="rounded-xl flex-1 shadow-lg shadow-primary/25"
+                            className="rounded-xl flex-1 shadow-lg shadow-primary/25 text-xs md:text-sm h-8 md:h-9"
                             onClick={() => setApproveModal({ open: true, registration: reg })}
                           >
-                            <Check className="mr-1 h-4 w-4" />
+                            <Check className="mr-1 h-3.5 w-3.5 md:h-4 md:w-4" />
                             Approve
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
-                            className="rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10"
+                            className="rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10 h-8 md:h-9 w-8 md:w-9 p-0"
                             onClick={() => setRejectDialog({ open: true, registration: reg })}
                           >
                             <X className="h-4 w-4" />
@@ -266,7 +268,7 @@ export default function UsersPage() {
             {/* All Users Tab */}
             <TabsContent value="approved">
               {isLoading ? (
-                <Card className="flex justify-center py-16 shadow-card rounded-2xl">
+                <Card className="flex justify-center py-12 md:py-16 shadow-card rounded-2xl">
                   <div className="flex flex-col items-center gap-3">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     <p className="text-sm text-muted-foreground">Loading users...</p>
@@ -274,16 +276,16 @@ export default function UsersPage() {
                 </Card>
               ) : uniqueUsers.length === 0 ? (
                 <Card className="shadow-card rounded-2xl">
-                  <CardContent className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-                    <div className="h-16 w-16 rounded-2xl bg-secondary flex items-center justify-center mb-4">
-                      <Users className="h-8 w-8 opacity-50" />
+                  <CardContent className="flex flex-col items-center justify-center py-12 md:py-16 text-muted-foreground">
+                    <div className="h-12 w-12 md:h-16 md:w-16 rounded-2xl bg-secondary flex items-center justify-center mb-3 md:mb-4">
+                      <Users className="h-6 w-6 md:h-8 md:w-8 opacity-50" />
                     </div>
-                    <p className="text-lg mb-1 font-medium">No users yet</p>
-                    <p className="text-sm">Approved users will appear here</p>
+                    <p className="text-base md:text-lg mb-1 font-medium">No users yet</p>
+                    <p className="text-xs md:text-sm">Approved users will appear here</p>
                   </CardContent>
                 </Card>
               ) : (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {uniqueUsers.map((userRole) => {
                     const displayName = userRole.profile?.full_name || userRole.profile?.username || 'Unknown User';
                     const userRoles = getUserRoles(userRole.user_id);
@@ -294,37 +296,37 @@ export default function UsersPage() {
 
                     return (
                       <Card key={userRole.user_id} className="shadow-card rounded-2xl card-hover overflow-hidden">
-                        <CardContent className="p-6">
+                        <CardContent className="p-4 md:p-6">
                           <div className="flex items-start justify-between">
-                            <div className="flex items-center gap-4">
-                              <Avatar className="h-12 w-12 ring-2 ring-border">
-                                <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground font-semibold">
+                            <div className="flex items-center gap-3 md:gap-4 min-w-0 flex-1">
+                              <Avatar className="h-10 w-10 md:h-12 md:w-12 ring-2 ring-border shrink-0">
+                                <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground font-semibold text-sm md:text-base">
                                   {getInitials(displayName)}
                                 </AvatarFallback>
                               </Avatar>
-                              <div>
-                                <div className="font-semibold text-lg">{displayName}</div>
-                                <div className="text-sm text-muted-foreground">
+                              <div className="min-w-0 flex-1">
+                                <div className="font-semibold text-base md:text-lg truncate">{displayName}</div>
+                                <div className="text-xs md:text-sm text-muted-foreground truncate">
                                   {userRole.profile?.username || 'No username'}
                                 </div>
                               </div>
                             </div>
                           </div>
-                          <div className="mt-5 flex flex-wrap gap-2">
+                          <div className="mt-4 md:mt-5 flex flex-wrap gap-1.5 md:gap-2">
                             {userRoles.map(role => (
                               <span key={role}>{getRoleBadge(role)}</span>
                             ))}
                           </div>
                           {!isOwnerUser && (
-                            <div className="mt-4 space-y-2">
+                            <div className="mt-3 md:mt-4 space-y-2">
                               {canPromote && (
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="rounded-xl w-full"
+                                  className="rounded-xl w-full text-xs md:text-sm h-8 md:h-9"
                                   onClick={() => handlePromoteToLeader(userRole.user_id, displayName)}
                                 >
-                                  <Shield className="mr-2 h-4 w-4" />
+                                  <Shield className="mr-2 h-3.5 w-3.5 md:h-4 md:w-4" />
                                   Promote to Leader
                                 </Button>
                               )}
@@ -332,24 +334,24 @@ export default function UsersPage() {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="rounded-xl w-full text-destructive hover:text-destructive"
+                                  className="rounded-xl w-full text-destructive hover:text-destructive text-xs md:text-sm h-8 md:h-9"
                                   onClick={() => handleDemoteFromLeader(userRole)}
                                 >
-                                  <UserCheck className="mr-2 h-4 w-4" />
+                                  <UserCheck className="mr-2 h-3.5 w-3.5 md:h-4 md:w-4" />
                                   Demote to Teammate
                                 </Button>
                               )}
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="rounded-xl w-full text-destructive hover:text-destructive hover:bg-destructive/10"
+                                className="rounded-xl w-full text-destructive hover:text-destructive hover:bg-destructive/10 text-xs md:text-sm h-8 md:h-9"
                                 onClick={() => setDeleteDialog({
                                   open: true,
                                   userId: userRole.user_id,
                                   userName: displayName,
                                 })}
                               >
-                                <Trash2 className="mr-2 h-4 w-4" />
+                                <Trash2 className="mr-2 h-3.5 w-3.5 md:h-4 md:w-4" />
                                 Remove User
                               </Button>
                             </div>
