@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useAllUsersWithRoles, useAddUserRole, useRemoveUserRole } from '@/hooks/useUserRoles';
+import { useAllUsersWithRoles, usePromoteToLeader } from '@/hooks/useUserRoles';
 import { usePendingRegistrations, useRejectRegistration } from '@/hooks/usePendingRegistrations';
 import { ApproveRegistrationModal } from '@/components/users/ApproveRegistrationModal';
+import { DemoteToTeammateModal } from '@/components/users/DemoteToTeammateModal';
 import { Header } from '@/components/layout/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,7 +23,7 @@ import {
   Loader2, Users, Shield, ShieldCheck, UserCheck, 
   Clock, Check, X, UserPlus 
 } from 'lucide-react';
-import { AppRole } from '@/types';
+import { AppRole, Profile } from '@/types';
 import { format } from 'date-fns';
 import { PendingRegistration } from '@/hooks/usePendingRegistrations';
 
@@ -30,17 +31,19 @@ export default function UsersPage() {
   const { authUser, loading, isOwner } = useAuth();
   const { data: usersWithRoles = [], isLoading } = useAllUsersWithRoles();
   const { data: pendingRegistrations = [], isLoading: loadingPending } = usePendingRegistrations();
-  const addRole = useAddUserRole();
-  const removeRole = useRemoveUserRole();
+  const promoteToLeader = usePromoteToLeader();
   const rejectRegistration = useRejectRegistration();
 
-  const [confirmDialog, setConfirmDialog] = useState<{
+  const [promoteDialog, setPromoteDialog] = useState<{
     open: boolean;
-    action: 'add' | 'remove';
     userId: string;
-    role: AppRole;
     userName: string;
   } | null>(null);
+
+  const [demoteModal, setDemoteModal] = useState<{
+    open: boolean;
+    user: { user_id: string; profile?: Profile } | null;
+  }>({ open: false, user: null });
 
   const [approveModal, setApproveModal] = useState<{
     open: boolean;
@@ -101,34 +104,24 @@ export default function UsersPage() {
   };
 
   const handlePromoteToLeader = (userId: string, userName: string) => {
-    setConfirmDialog({
+    setPromoteDialog({
       open: true,
-      action: 'add',
       userId,
-      role: 'leader',
       userName,
     });
   };
 
-  const handleDemoteFromLeader = (userId: string, userName: string) => {
-    setConfirmDialog({
+  const handleDemoteFromLeader = (userRole: typeof usersWithRoles[0]) => {
+    setDemoteModal({
       open: true,
-      action: 'remove',
-      userId,
-      role: 'leader',
-      userName,
+      user: { user_id: userRole.user_id, profile: userRole.profile },
     });
   };
 
-  const handleConfirm = async () => {
-    if (!confirmDialog) return;
-
-    if (confirmDialog.action === 'add') {
-      await addRole.mutateAsync({ userId: confirmDialog.userId, role: confirmDialog.role });
-    } else {
-      await removeRole.mutateAsync({ userId: confirmDialog.userId, role: confirmDialog.role });
-    }
-    setConfirmDialog(null);
+  const handleConfirmPromotion = async () => {
+    if (!promoteDialog) return;
+    await promoteToLeader.mutateAsync(promoteDialog.userId);
+    setPromoteDialog(null);
   };
 
   const handleReject = async () => {
@@ -327,10 +320,10 @@ export default function UsersPage() {
                                   variant="outline"
                                   size="sm"
                                   className="rounded-xl w-full text-destructive hover:text-destructive"
-                                  onClick={() => handleDemoteFromLeader(userRole.user_id, displayName)}
+                                  onClick={() => handleDemoteFromLeader(userRole)}
                                 >
                                   <UserCheck className="mr-2 h-4 w-4" />
-                                  Remove Leader Role
+                                  Demote to Teammate
                                 </Button>
                               )}
                             </div>
@@ -378,33 +371,37 @@ export default function UsersPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Role Change Dialog */}
-        <Dialog open={confirmDialog?.open ?? false} onOpenChange={(open) => !open && setConfirmDialog(null)}>
+        {/* Promote to Leader Dialog */}
+        <Dialog open={promoteDialog?.open ?? false} onOpenChange={(open) => !open && setPromoteDialog(null)}>
           <DialogContent className="rounded-2xl">
             <DialogHeader>
-              <DialogTitle className="text-xl font-bold">
-                {confirmDialog?.action === 'add' ? 'Promote to Leader' : 'Remove Leader Role'}
-              </DialogTitle>
+              <DialogTitle className="text-xl font-bold">Promote to Leader</DialogTitle>
               <DialogDescription>
-                {confirmDialog?.action === 'add'
-                  ? `Are you sure you want to promote ${confirmDialog?.userName} to Leader? They will be able to assign tasks but won't appear in the capacity grid.`
-                  : `Are you sure you want to remove the Leader role from ${confirmDialog?.userName}?`}
+                Are you sure you want to promote <strong>{promoteDialog?.userName}</strong> to Leader? 
+                They will be able to assign tasks but won't appear in the capacity grid.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter className="gap-2">
-              <Button variant="outline" onClick={() => setConfirmDialog(null)} className="rounded-xl">
+              <Button variant="outline" onClick={() => setPromoteDialog(null)} className="rounded-xl">
                 Cancel
               </Button>
               <Button
-                onClick={handleConfirm}
-                disabled={addRole.isPending || removeRole.isPending}
+                onClick={handleConfirmPromotion}
+                disabled={promoteToLeader.isPending}
                 className="rounded-xl shadow-lg shadow-primary/25"
               >
-                {addRole.isPending || removeRole.isPending ? 'Processing...' : 'Confirm'}
+                {promoteToLeader.isPending ? 'Promoting...' : 'Confirm'}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Demote to Teammate Modal */}
+        <DemoteToTeammateModal
+          user={demoteModal.user}
+          open={demoteModal.open}
+          onClose={() => setDemoteModal({ open: false, user: null })}
+        />
       </main>
     </div>
   );

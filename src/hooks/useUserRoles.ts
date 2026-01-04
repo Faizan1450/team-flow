@@ -129,3 +129,57 @@ export function useRemoveUserRole() {
     }
   });
 }
+
+export function usePromoteToLeader() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      const { error } = await supabase.rpc('promote_to_leader', {
+        _user_id: userId,
+      });
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users-with-roles'] });
+      queryClient.invalidateQueries({ queryKey: ['teammates'] });
+      toast.success('User promoted to leader');
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to promote user: ' + error.message);
+    }
+  });
+}
+
+export function useDemoteToTeammate() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ 
+      userId, 
+      dailyCapacity = 8, 
+      workingDays = [1, 2, 3, 4, 5] 
+    }: { 
+      userId: string; 
+      dailyCapacity?: number; 
+      workingDays?: number[]; 
+    }) => {
+      const { error } = await supabase.rpc('demote_to_teammate', {
+        _user_id: userId,
+        _daily_capacity: dailyCapacity,
+        _working_days: workingDays,
+      });
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users-with-roles'] });
+      queryClient.invalidateQueries({ queryKey: ['teammates'] });
+      toast.success('User demoted to teammate');
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to demote user: ' + error.message);
+    }
+  });
+}
