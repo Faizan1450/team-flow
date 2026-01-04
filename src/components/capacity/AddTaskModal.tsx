@@ -153,7 +153,7 @@ export function AddTaskModal({
           <DialogTitle>Assign New Task</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
           <div className="space-y-2">
             <Label htmlFor="title">Task Title</Label>
             <Input
