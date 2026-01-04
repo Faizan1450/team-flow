@@ -245,6 +245,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      demote_to_teammate: {
+        Args: {
+          _daily_capacity?: number
+          _user_id: string
+          _working_days?: number[]
+        }
+        Returns: undefined
+      }
       get_teammate_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
@@ -254,6 +262,7 @@ export type Database = {
         Returns: boolean
       }
       is_owner_or_leader: { Args: { _user_id: string }; Returns: boolean }
+      promote_to_leader: { Args: { _user_id: string }; Returns: undefined }
       reject_registration: { Args: { _pending_id: string }; Returns: undefined }
     }
     Enums: {
