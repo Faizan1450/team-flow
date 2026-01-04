@@ -87,7 +87,13 @@ export type Database = {
           description: string | null
           estimated_hours: number
           id: string
+          is_recurring: boolean
           is_self_assigned: boolean
+          parent_task_id: string | null
+          recurrence_dates: string[] | null
+          recurrence_end_date: string | null
+          recurrence_interval: number | null
+          recurrence_type: string | null
           sort_order: number
           status: string
           title: string
@@ -102,7 +108,13 @@ export type Database = {
           description?: string | null
           estimated_hours: number
           id?: string
+          is_recurring?: boolean
           is_self_assigned?: boolean
+          parent_task_id?: string | null
+          recurrence_dates?: string[] | null
+          recurrence_end_date?: string | null
+          recurrence_interval?: number | null
+          recurrence_type?: string | null
           sort_order?: number
           status?: string
           title: string
@@ -117,7 +129,13 @@ export type Database = {
           description?: string | null
           estimated_hours?: number
           id?: string
+          is_recurring?: boolean
           is_self_assigned?: boolean
+          parent_task_id?: string | null
+          recurrence_dates?: string[] | null
+          recurrence_end_date?: string | null
+          recurrence_interval?: number | null
+          recurrence_type?: string | null
           sort_order?: number
           status?: string
           title?: string
@@ -129,6 +147,13 @@ export type Database = {
             columns: ["assigned_to"]
             isOneToOne: false
             referencedRelation: "teammates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_parent_task_id_fkey"
+            columns: ["parent_task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
             referencedColumns: ["id"]
           },
         ]

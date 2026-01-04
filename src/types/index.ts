@@ -30,6 +30,8 @@ export interface Teammate {
   updated_at: string;
 }
 
+export type RecurrenceType = 'none' | 'daily' | 'custom';
+
 export interface Task {
   id: string;
   title: string;
@@ -42,6 +44,12 @@ export interface Task {
   status: 'pending' | 'in-progress' | 'completed';
   is_self_assigned: boolean;
   sort_order: number;
+  is_recurring: boolean;
+  recurrence_type?: RecurrenceType;
+  recurrence_interval?: number;
+  recurrence_end_date?: string;
+  recurrence_dates?: string[];
+  parent_task_id?: string;
   created_at: string;
   updated_at: string;
 }
