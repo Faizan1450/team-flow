@@ -11,6 +11,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, username: string, fullName: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
   isOwner: boolean;
   isLeader: boolean;
   isTeammate: boolean;
@@ -159,6 +160,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAuthUser(null);
   };
 
+  const refreshProfile = async () => {
+    if (!user?.id) return;
+    const { profile, roles } = await fetchUserData(user.id);
+    setAuthUser(prev => prev ? {
+      ...prev,
+      profile,
+      roles
+    } : null);
+  };
+
   const isOwner = authUser?.roles.includes('owner') || false;
   const isLeader = authUser?.roles.includes('leader') || isOwner;
   const isTeammate = authUser?.roles.includes('teammate') || false;
@@ -173,6 +184,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signIn,
         signUp,
         signOut,
+        refreshProfile,
         isOwner,
         isLeader,
         isTeammate

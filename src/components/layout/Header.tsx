@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePendingRegistrations } from '@/hooks/usePendingRegistrations';
@@ -10,9 +11,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { SettingsModal } from '@/components/settings/SettingsModal';
 import { LayoutGrid, Users, Settings, LogOut, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -20,6 +22,7 @@ export function Header() {
   const navigate = useNavigate();
   const location = useLocation();
   const { authUser, signOut, isOwner, isLeader } = useAuth();
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const { data: pendingRegistrations = [] } = usePendingRegistrations();
   const pendingCount = pendingRegistrations.length;
 
@@ -112,6 +115,7 @@ export function Header() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-10 w-10 rounded-full ring-2 ring-border hover:ring-primary/50 transition-all">
                 <Avatar className="h-10 w-10">
+                  <AvatarImage src={authUser?.profile?.avatar_url || undefined} alt={authUser?.profile?.full_name} />
                   <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground text-sm font-semibold">
                     {authUser?.profile ? getInitials(authUser.profile.full_name) : '?'}
                   </AvatarFallback>
@@ -126,7 +130,7 @@ export function Header() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer rounded-lg">
+              <DropdownMenuItem onClick={() => setSettingsOpen(true)} className="cursor-pointer rounded-lg">
                 <Settings className="mr-2 h-4 w-4" />
                 Settings
               </DropdownMenuItem>
@@ -137,6 +141,8 @@ export function Header() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
         </div>
       </div>
     </header>
