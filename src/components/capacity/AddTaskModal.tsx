@@ -148,12 +148,12 @@ export function AddTaskModal({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-md max-h-[85vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Assign New Task</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+        <div className="space-y-4 flex-1 overflow-y-auto pr-2">
           <div className="space-y-2">
             <Label htmlFor="title">Task Title</Label>
             <Input
@@ -383,7 +383,7 @@ export function AddTaskModal({
           )}
         </div>
 
-        <DialogFooter className="gap-2">
+        <DialogFooter className="gap-2 flex-shrink-0">
           <Button variant="outline" onClick={handleClose}>
             Cancel
           </Button>
