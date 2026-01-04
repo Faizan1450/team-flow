@@ -137,21 +137,21 @@ export default function Team() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container py-8">
-        <div className="space-y-8 animate-fade-in">
-          <div className="flex items-center justify-between">
-            <div className="space-y-2">
-              <h1 className="text-3xl font-bold tracking-tight">Team Management</h1>
-              <p className="text-muted-foreground text-lg">Add and manage your team members</p>
+      <main className="container px-4 md:px-8 py-4 md:py-8">
+        <div className="space-y-4 md:space-y-8 animate-fade-in">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1 md:space-y-2">
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Team Management</h1>
+              <p className="text-muted-foreground text-sm md:text-lg">Add and manage your team members</p>
             </div>
-            <Button onClick={() => setShowAdd(true)} className="rounded-xl shadow-lg shadow-primary/25">
+            <Button onClick={() => setShowAdd(true)} className="rounded-xl shadow-lg shadow-primary/25 w-full sm:w-auto">
               <Plus className="mr-2 h-4 w-4" />
               Add Teammate
             </Button>
           </div>
 
           {isLoading ? (
-            <Card className="flex justify-center py-16 shadow-card rounded-2xl">
+            <Card className="flex justify-center py-12 md:py-16 shadow-card rounded-2xl">
               <div className="flex flex-col items-center gap-3">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 <p className="text-sm text-muted-foreground">Loading teammates...</p>
@@ -159,59 +159,59 @@ export default function Team() {
             </Card>
           ) : teammates.length === 0 ? (
             <Card className="shadow-card rounded-2xl">
-              <CardContent className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-                <div className="h-16 w-16 rounded-2xl bg-secondary flex items-center justify-center mb-4">
-                  <Users className="h-8 w-8 opacity-50" />
+              <CardContent className="flex flex-col items-center justify-center py-12 md:py-16 text-muted-foreground">
+                <div className="h-12 w-12 md:h-16 md:w-16 rounded-2xl bg-secondary flex items-center justify-center mb-3 md:mb-4">
+                  <Users className="h-6 w-6 md:h-8 md:w-8 opacity-50" />
                 </div>
-                <p className="text-lg mb-1 font-medium">No teammates yet</p>
-                <p className="text-sm">Add team members to start planning capacity</p>
+                <p className="text-base md:text-lg mb-1 font-medium">No teammates yet</p>
+                <p className="text-xs md:text-sm text-center">Add team members to start planning capacity</p>
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {teammates.map((tm) => (
                 <Card key={tm.id} className="shadow-card rounded-2xl card-hover overflow-hidden">
-                  <CardContent className="p-6">
+                  <CardContent className="p-4 md:p-6">
                     <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-4">
-                        <Avatar className="h-12 w-12 ring-2 ring-border">
-                          <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground font-semibold">
+                      <div className="flex items-center gap-3 md:gap-4 min-w-0 flex-1">
+                        <Avatar className="h-10 w-10 md:h-12 md:w-12 ring-2 ring-border shrink-0">
+                          <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground font-semibold text-sm md:text-base">
                             {getInitials(tm.name)}
                           </AvatarFallback>
                         </Avatar>
-                        <div>
-                          <div className="font-semibold text-lg">{tm.name}</div>
-                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                            <Briefcase className="h-3.5 w-3.5" />
-                            {tm.job_role}
+                        <div className="min-w-0 flex-1">
+                          <div className="font-semibold text-base md:text-lg truncate">{tm.name}</div>
+                          <div className="flex items-center gap-1 text-xs md:text-sm text-muted-foreground">
+                            <Briefcase className="h-3 w-3 md:h-3.5 md:w-3.5 shrink-0" />
+                            <span className="truncate">{tm.job_role}</span>
                           </div>
                         </div>
                       </div>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl"
+                        className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl h-8 w-8 md:h-9 md:w-9 shrink-0"
                         onClick={() => deleteTeammate.mutate(tm.id)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                    <div className="mt-5 flex flex-wrap gap-2">
-                      <Badge variant="secondary" className="rounded-lg px-3 py-1 flex items-center gap-1.5">
+                    <div className="mt-4 md:mt-5 flex flex-wrap gap-2">
+                      <Badge variant="secondary" className="rounded-lg px-2 md:px-3 py-1 flex items-center gap-1 md:gap-1.5 text-xs">
                         <Clock className="h-3 w-3" />
                         {tm.daily_capacity}h/day
                       </Badge>
                       {tm.email && (
-                        <Badge variant="outline" className="rounded-lg px-3 py-1 truncate max-w-[180px]">
+                        <Badge variant="outline" className="rounded-lg px-2 md:px-3 py-1 truncate max-w-[140px] md:max-w-[180px] text-xs">
                           {tm.email}
                         </Badge>
                       )}
                     </div>
-                    <div className="mt-4">
+                    <div className="mt-3 md:mt-4">
                       <Button
                         variant="outline"
                         size="sm"
-                        className="w-full rounded-xl"
+                        className="w-full rounded-xl text-xs md:text-sm h-9 md:h-10"
                         onClick={() => setOffDaysModal({
                           open: true,
                           teammateId: tm.id,
@@ -219,7 +219,7 @@ export default function Team() {
                           workingDays: tm.working_days,
                         })}
                       >
-                        <CalendarOff className="mr-2 h-4 w-4" />
+                        <CalendarOff className="mr-2 h-3.5 w-3.5 md:h-4 md:w-4" />
                         Manage Off Days
                       </Button>
                     </div>

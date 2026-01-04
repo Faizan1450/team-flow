@@ -55,36 +55,36 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container py-8">
+      <main className="container px-4 md:px-8 py-4 md:py-8">
         {isOwner ? (
-          <div className="space-y-8 animate-fade-in">
-            <div className="space-y-2">
-              <h1 className="text-3xl font-bold tracking-tight">Team Capacity</h1>
-              <p className="text-muted-foreground text-lg">
+          <div className="space-y-4 md:space-y-8 animate-fade-in">
+            <div className="space-y-1 md:space-y-2">
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Team Capacity</h1>
+              <p className="text-muted-foreground text-sm md:text-lg">
                 View and manage your team's workload
               </p>
             </div>
             <CapacityGrid />
           </div>
         ) : isLeader ? (
-          <div className="space-y-6 animate-fade-in">
+          <div className="space-y-4 md:space-y-6 animate-fade-in">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full max-w-md grid-cols-2">
-                <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-                <TabsTrigger value="my-tasks">My Tasks</TabsTrigger>
+              <TabsList className="grid w-full max-w-md grid-cols-2 h-10 md:h-11">
+                <TabsTrigger value="dashboard" className="text-sm">Dashboard</TabsTrigger>
+                <TabsTrigger value="my-tasks" className="text-sm">My Tasks</TabsTrigger>
               </TabsList>
-              <TabsContent value="dashboard" className="mt-6">
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <h1 className="text-3xl font-bold tracking-tight">Team Capacity</h1>
-                    <p className="text-muted-foreground text-lg">
+              <TabsContent value="dashboard" className="mt-4 md:mt-6">
+                <div className="space-y-4 md:space-y-6">
+                  <div className="space-y-1 md:space-y-2">
+                    <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Team Capacity</h1>
+                    <p className="text-muted-foreground text-sm md:text-lg">
                       View and manage your team's workload
                     </p>
                   </div>
                   <CapacityGrid />
                 </div>
               </TabsContent>
-              <TabsContent value="my-tasks" className="mt-6">
+              <TabsContent value="my-tasks" className="mt-4 md:mt-6">
                 <TeammateView />
               </TabsContent>
             </Tabs>
@@ -92,37 +92,37 @@ const Index = () => {
         ) : isTeammate ? (
           <TeammateView />
         ) : isPending ? (
-          <div className="flex flex-col items-center justify-center h-64 text-muted-foreground animate-fade-in">
-            <Card className="rounded-2xl shadow-card p-8 text-center max-w-md">
-              <div className="h-16 w-16 rounded-2xl bg-warning/10 flex items-center justify-center mx-auto mb-4">
-                <Clock className="h-8 w-8 text-warning" />
+          <div className="flex flex-col items-center justify-center h-64 text-muted-foreground animate-fade-in px-4">
+            <Card className="rounded-2xl shadow-card p-6 md:p-8 text-center max-w-md w-full">
+              <div className="h-12 w-12 md:h-16 md:w-16 rounded-2xl bg-warning/10 flex items-center justify-center mx-auto mb-3 md:mb-4">
+                <Clock className="h-6 w-6 md:h-8 md:w-8 text-warning" />
               </div>
-              <p className="text-xl mb-2 font-semibold text-foreground">Pending Approval</p>
-              <p className="text-sm">
+              <p className="text-lg md:text-xl mb-2 font-semibold text-foreground">Pending Approval</p>
+              <p className="text-xs md:text-sm">
                 Your registration is being reviewed by the owner. You'll get access once approved.
               </p>
             </Card>
           </div>
         ) : isRejected ? (
-          <div className="flex flex-col items-center justify-center h-64 text-muted-foreground animate-fade-in">
-            <Card className="rounded-2xl shadow-card p-8 text-center max-w-md">
-              <div className="h-16 w-16 rounded-2xl bg-destructive/10 flex items-center justify-center mx-auto mb-4">
-                <Clock className="h-8 w-8 text-destructive" />
+          <div className="flex flex-col items-center justify-center h-64 text-muted-foreground animate-fade-in px-4">
+            <Card className="rounded-2xl shadow-card p-6 md:p-8 text-center max-w-md w-full">
+              <div className="h-12 w-12 md:h-16 md:w-16 rounded-2xl bg-destructive/10 flex items-center justify-center mx-auto mb-3 md:mb-4">
+                <Clock className="h-6 w-6 md:h-8 md:w-8 text-destructive" />
               </div>
-              <p className="text-xl mb-2 font-semibold text-foreground">Registration Rejected</p>
-              <p className="text-sm">
+              <p className="text-lg md:text-xl mb-2 font-semibold text-foreground">Registration Rejected</p>
+              <p className="text-xs md:text-sm">
                 Your registration was not approved. Please contact the administrator.
               </p>
             </Card>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center h-64 text-muted-foreground animate-fade-in">
-            <Card className="rounded-2xl shadow-card p-8 text-center max-w-md">
-              <div className="h-16 w-16 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-4">
-                <CheckCircle2 className="h-8 w-8 opacity-50" />
+          <div className="flex flex-col items-center justify-center h-64 text-muted-foreground animate-fade-in px-4">
+            <Card className="rounded-2xl shadow-card p-6 md:p-8 text-center max-w-md w-full">
+              <div className="h-12 w-12 md:h-16 md:w-16 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-3 md:mb-4">
+                <CheckCircle2 className="h-6 w-6 md:h-8 md:w-8 opacity-50" />
               </div>
-              <p className="text-xl mb-2 font-semibold text-foreground">No role assigned</p>
-              <p className="text-sm">Contact the owner to get access to the system</p>
+              <p className="text-lg md:text-xl mb-2 font-semibold text-foreground">No role assigned</p>
+              <p className="text-xs md:text-sm">Contact the owner to get access to the system</p>
             </Card>
           </div>
         )}
