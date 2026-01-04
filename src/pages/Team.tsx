@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -17,7 +18,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Plus, Trash2, Loader2, Users, Briefcase, Clock, CalendarOff } from 'lucide-react';
+import { Plus, Trash2, Loader2, Users, Briefcase, Clock, CalendarOff, Key } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export default function Team() {
   const { authUser, loading, isOwner } = useAuth();
@@ -30,6 +33,9 @@ export default function Team() {
   const [email, setEmail] = useState('');
   const [jobRole, setJobRole] = useState('');
   const [dailyCapacity, setDailyCapacity] = useState('8');
+  const [createLoginCredentials, setCreateLoginCredentials] = useState(false);
+  const [password, setPassword] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
   
   const [offDaysModal, setOffDaysModal] = useState<{
     open: boolean;
@@ -60,20 +66,67 @@ export default function Team() {
 
   const handleAddTeammate = async () => {
     if (!name || !jobRole) return;
+    if (createLoginCredentials && (!email || !password)) {
+      toast.error('Email and password are required to create login credentials');
+      return;
+    }
+    if (createLoginCredentials && password.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
 
-    await createTeammate.mutateAsync({
-      name,
-      email: email || undefined,
-      job_role: jobRole,
-      daily_capacity: parseInt(dailyCapacity) || 8,
-      working_days: [1, 2, 3, 4, 5],
-    });
+    setIsCreating(true);
+    let userId: string | undefined;
 
-    setName('');
-    setEmail('');
-    setJobRole('');
-    setDailyCapacity('8');
-    setShowAdd(false);
+    try {
+      // If creating login credentials, call the edge function first
+      if (createLoginCredentials && email && password) {
+        const { data: session } = await supabase.auth.getSession();
+        
+        const response = await supabase.functions.invoke('create-teammate-user', {
+          body: {
+            email,
+            password,
+            fullName: name,
+            username: email
+          }
+        });
+
+        if (response.error) {
+          throw new Error(response.error.message || 'Failed to create user');
+        }
+
+        if (response.data?.error) {
+          throw new Error(response.data.error);
+        }
+
+        userId = response.data.userId;
+        toast.success(`Login credentials created for ${name}`);
+      }
+
+      // Create the teammate record
+      await createTeammate.mutateAsync({
+        name,
+        email: email || undefined,
+        job_role: jobRole,
+        daily_capacity: parseInt(dailyCapacity) || 8,
+        working_days: [1, 2, 3, 4, 5],
+        user_id: userId,
+      });
+
+      // Reset form
+      setName('');
+      setEmail('');
+      setJobRole('');
+      setDailyCapacity('8');
+      setPassword('');
+      setCreateLoginCredentials(false);
+      setShowAdd(false);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to add teammate');
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   const getInitials = (name: string) => {
@@ -186,8 +239,15 @@ export default function Team() {
                 <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="John Doe" className="h-11 rounded-xl" />
               </div>
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Email (optional)</Label>
-                <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="john@example.com" className="h-11 rounded-xl" />
+                <Label className="text-sm font-medium">Email {createLoginCredentials ? '' : '(optional)'}</Label>
+                <Input 
+                  type="email"
+                  value={email} 
+                  onChange={(e) => setEmail(e.target.value)} 
+                  placeholder="john@example.com" 
+                  className="h-11 rounded-xl"
+                  required={createLoginCredentials}
+                />
               </div>
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Job Role</Label>
@@ -197,11 +257,46 @@ export default function Team() {
                 <Label className="text-sm font-medium">Daily Capacity (hours)</Label>
                 <Input type="number" value={dailyCapacity} onChange={(e) => setDailyCapacity(e.target.value)} className="h-11 rounded-xl" />
               </div>
+              
+              <div className="border-t pt-4 mt-4">
+                <div className="flex items-center space-x-3 mb-4">
+                  <Checkbox 
+                    id="createLogin" 
+                    checked={createLoginCredentials}
+                    onCheckedChange={(checked) => setCreateLoginCredentials(checked === true)}
+                  />
+                  <Label htmlFor="createLogin" className="text-sm font-medium cursor-pointer flex items-center gap-2">
+                    <Key className="h-4 w-4" />
+                    Create login credentials
+                  </Label>
+                </div>
+                
+                {createLoginCredentials && (
+                  <div className="space-y-2 animate-fade-in">
+                    <Label className="text-sm font-medium">Password</Label>
+                    <Input 
+                      type="password"
+                      value={password} 
+                      onChange={(e) => setPassword(e.target.value)} 
+                      placeholder="Min 6 characters" 
+                      className="h-11 rounded-xl"
+                      minLength={6}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Share these credentials with the teammate so they can login
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
             <DialogFooter className="gap-2">
               <Button variant="outline" onClick={() => setShowAdd(false)} className="rounded-xl">Cancel</Button>
-              <Button onClick={handleAddTeammate} disabled={!name || !jobRole || createTeammate.isPending} className="rounded-xl shadow-lg shadow-primary/25">
-                {createTeammate.isPending ? 'Adding...' : 'Add Teammate'}
+              <Button 
+                onClick={handleAddTeammate} 
+                disabled={!name || !jobRole || isCreating || (createLoginCredentials && (!email || !password))} 
+                className="rounded-xl shadow-lg shadow-primary/25"
+              >
+                {isCreating ? 'Creating...' : 'Add Teammate'}
               </Button>
             </DialogFooter>
           </DialogContent>

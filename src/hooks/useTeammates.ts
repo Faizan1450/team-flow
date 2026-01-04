@@ -48,11 +48,16 @@ export function useCreateTeammate() {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (teammate: Omit<Teammate, 'id' | 'created_at' | 'updated_at' | 'created_by'>) => {
+    mutationFn: async (teammate: Omit<Teammate, 'id' | 'created_at' | 'updated_at' | 'created_by' | 'avatar_url'> & { user_id?: string }) => {
       const { data, error } = await supabase
         .from('teammates')
         .insert({
-          ...teammate,
+          name: teammate.name,
+          email: teammate.email,
+          job_role: teammate.job_role,
+          daily_capacity: teammate.daily_capacity,
+          working_days: teammate.working_days,
+          user_id: teammate.user_id || null,
           created_by: user?.id
         })
         .select()

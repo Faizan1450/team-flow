@@ -1,1 +1,4 @@
 project_id = "pyroetgqdzgquhtxmjlv"
+
+[functions.create-teammate-user]
+verify_jwt = false
