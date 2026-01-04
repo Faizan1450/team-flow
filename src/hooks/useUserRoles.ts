@@ -134,9 +134,19 @@ export function usePromoteToLeader() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (userId: string) => {
+    mutationFn: async ({ 
+      userId, 
+      dailyCapacity = 8, 
+      workingDays = [1, 2, 3, 4, 5] 
+    }: { 
+      userId: string; 
+      dailyCapacity?: number; 
+      workingDays?: number[]; 
+    }) => {
       const { error } = await supabase.rpc('promote_to_leader', {
         _user_id: userId,
+        _daily_capacity: dailyCapacity,
+        _working_days: workingDays,
       });
       
       if (error) throw error;

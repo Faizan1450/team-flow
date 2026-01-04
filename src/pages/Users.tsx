@@ -120,7 +120,7 @@ export default function UsersPage() {
 
   const handleConfirmPromotion = async () => {
     if (!promoteDialog) return;
-    await promoteToLeader.mutateAsync(promoteDialog.userId);
+    await promoteToLeader.mutateAsync({ userId: promoteDialog.userId });
     setPromoteDialog(null);
   };
 

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,9 +8,11 @@ import { TeammateView } from '@/components/teammate/TeammateView';
 import { Navigate } from 'react-router-dom';
 import { Loader2, Clock, CheckCircle2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const Index = () => {
   const { authUser, user, loading, isOwner, isLeader, isTeammate } = useAuth();
+  const [activeTab, setActiveTab] = useState('dashboard');
 
   // Check if user has a pending registration
   const { data: pendingStatus } = useQuery({
@@ -53,7 +56,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="container py-8">
-        {isOwner || isLeader ? (
+        {isOwner ? (
           <div className="space-y-8 animate-fade-in">
             <div className="space-y-2">
               <h1 className="text-3xl font-bold tracking-tight">Team Capacity</h1>
@@ -62,6 +65,29 @@ const Index = () => {
               </p>
             </div>
             <CapacityGrid />
+          </div>
+        ) : isLeader ? (
+          <div className="space-y-6 animate-fade-in">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full max-w-md grid-cols-2">
+                <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+                <TabsTrigger value="my-tasks">My Tasks</TabsTrigger>
+              </TabsList>
+              <TabsContent value="dashboard" className="mt-6">
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <h1 className="text-3xl font-bold tracking-tight">Team Capacity</h1>
+                    <p className="text-muted-foreground text-lg">
+                      View and manage your team's workload
+                    </p>
+                  </div>
+                  <CapacityGrid />
+                </div>
+              </TabsContent>
+              <TabsContent value="my-tasks" className="mt-6">
+                <TeammateView />
+              </TabsContent>
+            </Tabs>
           </div>
         ) : isTeammate ? (
           <TeammateView />
