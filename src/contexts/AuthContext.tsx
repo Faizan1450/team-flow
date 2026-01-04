@@ -52,6 +52,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    let rolesSubscription: ReturnType<typeof supabase.channel> | null = null;
+
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -83,21 +85,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        fetchUserData(session.user.id).then(({ profile, roles }) => {
+        const userId = session.user.id;
+        
+        fetchUserData(userId).then(({ profile, roles }) => {
           setAuthUser({
-            id: session.user.id,
+            id: userId,
             email: session.user.email || '',
             profile,
             roles
           });
           setLoading(false);
         });
+
+        // Subscribe to role changes for the current user
+        rolesSubscription = supabase
+          .channel(`user-roles-${userId}`)
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'user_roles',
+              filter: `user_id=eq.${userId}`
+            },
+            async () => {
+              console.log('Role change detected, refreshing user data...');
+              const { profile, roles } = await fetchUserData(userId);
+              setAuthUser(prev => prev ? {
+                ...prev,
+                profile,
+                roles
+              } : null);
+            }
+          )
+          .subscribe();
       } else {
         setLoading(false);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      if (rolesSubscription) {
+        supabase.removeChannel(rolesSubscription);
+      }
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
