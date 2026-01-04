@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useAllUsersWithRoles, usePromoteToLeader } from '@/hooks/useUserRoles';
+import { useAllUsersWithRoles, usePromoteToLeader, useDeleteUser } from '@/hooks/useUserRoles';
 import { usePendingRegistrations, useRejectRegistration } from '@/hooks/usePendingRegistrations';
 import { ApproveRegistrationModal } from '@/components/users/ApproveRegistrationModal';
 import { DemoteToTeammateModal } from '@/components/users/DemoteToTeammateModal';
@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/dialog';
 import { 
   Loader2, Users, Shield, ShieldCheck, UserCheck, 
-  Clock, Check, X, UserPlus 
+  Clock, Check, X, UserPlus, Trash2 
 } from 'lucide-react';
 import { AppRole, Profile } from '@/types';
 import { format } from 'date-fns';
@@ -33,6 +33,7 @@ export default function UsersPage() {
   const { data: pendingRegistrations = [], isLoading: loadingPending } = usePendingRegistrations();
   const promoteToLeader = usePromoteToLeader();
   const rejectRegistration = useRejectRegistration();
+  const deleteUser = useDeleteUser();
 
   const [promoteDialog, setPromoteDialog] = useState<{
     open: boolean;
@@ -54,6 +55,12 @@ export default function UsersPage() {
     open: boolean;
     registration: PendingRegistration | null;
   }>({ open: false, registration: null });
+
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean;
+    userId: string;
+    userName: string;
+  } | null>(null);
 
   // Unique users (deduplicated by user_id), sorted by role priority
   const uniqueUsers = useMemo(() => {
@@ -128,6 +135,12 @@ export default function UsersPage() {
     if (!rejectDialog.registration) return;
     await rejectRegistration.mutateAsync(rejectDialog.registration.id);
     setRejectDialog({ open: false, registration: null });
+  };
+
+  const handleDeleteUser = async () => {
+    if (!deleteDialog) return;
+    await deleteUser.mutateAsync(deleteDialog.userId);
+    setDeleteDialog(null);
   };
 
   const getRoleBadge = (role: AppRole) => {
@@ -326,6 +339,19 @@ export default function UsersPage() {
                                   Demote to Teammate
                                 </Button>
                               )}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="rounded-xl w-full text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => setDeleteDialog({
+                                  open: true,
+                                  userId: userRole.user_id,
+                                  userName: displayName,
+                                })}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Remove User
+                              </Button>
                             </div>
                           )}
                         </CardContent>
@@ -402,6 +428,32 @@ export default function UsersPage() {
           open={demoteModal.open}
           onClose={() => setDemoteModal({ open: false, user: null })}
         />
+
+        {/* Delete User Dialog */}
+        <Dialog open={deleteDialog?.open ?? false} onOpenChange={(open) => !open && setDeleteDialog(null)}>
+          <DialogContent className="rounded-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold">Remove User</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to permanently remove <strong>{deleteDialog?.userName}</strong>? 
+                This action cannot be undone. All their data including tasks will be deleted.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="gap-2">
+              <Button variant="outline" onClick={() => setDeleteDialog(null)} className="rounded-xl">
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDeleteUser}
+                disabled={deleteUser.isPending}
+                className="rounded-xl"
+              >
+                {deleteUser.isPending ? 'Removing...' : 'Remove User'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );

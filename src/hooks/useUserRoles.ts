@@ -193,3 +193,32 @@ export function useDemoteToTeammate() {
     }
   });
 }
+
+export function useDeleteUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      const response = await supabase.functions.invoke('delete-user', {
+        body: { userId }
+      });
+
+      if (response.error) throw response.error;
+      if (response.data?.error) throw new Error(response.data.error);
+      
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users-with-roles'] });
+      queryClient.invalidateQueries({ queryKey: ['teammates'] });
+      queryClient.invalidateQueries({ queryKey: ['pending-registrations'] });
+      toast.success('User removed successfully');
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to remove user: ' + error.message);
+    }
+  });
+}
