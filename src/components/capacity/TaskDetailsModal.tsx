@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, Clock, User, Trash2, CheckCircle } from 'lucide-react';
+import { Plus, Clock, User, Trash2, CheckCircle, PlayCircle, Circle } from 'lucide-react';
 import { calculateDayCapacity, getCapacityPercentage, getRemainingCapacity, getCapacityStatus } from '@/lib/capacity';
 import { cn } from '@/lib/utils';
 import { Task } from '@/types';
@@ -50,11 +50,25 @@ export function TaskDetailsModal({
     empty: 'text-muted-foreground',
   };
 
-  const handleMarkComplete = (task: Task) => {
-    updateTask.mutate({
-      id: task.id,
-      updates: { status: task.status === 'completed' ? 'pending' : 'completed' }
-    });
+  const handleStatusChange = (task: Task) => {
+    const nextStatus = task.status === 'pending' ? 'in-progress' : task.status === 'in-progress' ? 'completed' : 'pending';
+    updateTask.mutate({ id: task.id, updates: { status: nextStatus } });
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed': return <CheckCircle className="h-4 w-4" />;
+      case 'in-progress': return <PlayCircle className="h-4 w-4" />;
+      default: return <Circle className="h-4 w-4" />;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return 'text-capacity-low hover:text-capacity-low hover:bg-capacity-low/10';
+      case 'in-progress': return 'text-primary hover:text-primary hover:bg-primary/10';
+      default: return 'text-muted-foreground hover:text-primary hover:bg-primary/10';
+    }
   };
 
   return (
@@ -114,9 +128,10 @@ export function TaskDetailsModal({
                   {capacity.tasks.map((task) => (
                     <div
                       key={task.id}
-                      className={cn(
-                        "group flex items-start justify-between p-3 rounded-lg border border-border bg-muted/30 hover:bg-muted/50 transition-colors",
-                        task.status === 'completed' && "opacity-60"
+                        className={cn(
+                          "group flex items-start justify-between p-3 rounded-lg border border-border bg-muted/30 hover:bg-muted/50 transition-colors",
+                          task.status === 'completed' && "opacity-60",
+                          task.status === 'in-progress' && "border-primary/50"
                       )}
                     >
                       <div className="space-y-1 min-w-0 flex-1">
@@ -127,6 +142,12 @@ export function TaskDetailsModal({
                           )}>
                             {task.title}
                           </span>
+                          <Badge 
+                            variant={task.status === 'in-progress' ? 'outline' : 'secondary'} 
+                            className={cn("text-xs", task.status === 'in-progress' && "border-primary text-primary")}
+                          >
+                            {task.status}
+                          </Badge>
                           {task.is_self_assigned && (
                             <Badge variant="secondary" className="text-xs">Self</Badge>
                           )}
@@ -151,10 +172,11 @@ export function TaskDetailsModal({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-capacity-low hover:text-capacity-low hover:bg-capacity-low/10"
-                          onClick={() => handleMarkComplete(task)}
+                          className={cn("h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity", getStatusColor(task.status))}
+                          onClick={() => handleStatusChange(task)}
+                          title="Click to change status"
                         >
-                          <CheckCircle className="h-4 w-4" />
+                          {getStatusIcon(task.status)}
                         </Button>
                         <Button
                           variant="ghost"
