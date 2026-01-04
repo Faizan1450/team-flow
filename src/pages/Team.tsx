@@ -41,6 +41,7 @@ export default function Team() {
     open: boolean;
     teammateId: string;
     teammateName: string;
+    workingDays: number[];
   } | null>(null);
 
   if (loading) {
@@ -215,6 +216,7 @@ export default function Team() {
                           open: true,
                           teammateId: tm.id,
                           teammateName: tm.name,
+                          workingDays: tm.working_days,
                         })}
                       >
                         <CalendarOff className="mr-2 h-4 w-4" />
@@ -308,6 +310,7 @@ export default function Team() {
             onClose={() => setOffDaysModal(null)}
             teammateId={offDaysModal.teammateId}
             teammateName={offDaysModal.teammateName}
+            workingDays={offDaysModal.workingDays}
           />
         )}
       </main>
