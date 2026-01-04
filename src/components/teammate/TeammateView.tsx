@@ -29,7 +29,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Clock, User, Calendar, Plus, GripVertical, CheckCircle, Loader2 } from 'lucide-react';
+import { Clock, User, Calendar, Plus, GripVertical, CheckCircle, Loader2, PlayCircle, Circle } from 'lucide-react';
 import { calculateDayCapacity, getCapacityPercentage, getCapacityStatus } from '@/lib/capacity';
 import { cn } from '@/lib/utils';
 import { Task } from '@/types';
@@ -43,6 +43,30 @@ function SortableTaskCard({ task, onMarkComplete }: SortableTaskCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
 
+  const getStatusIcon = () => {
+    switch (task.status) {
+      case 'completed': return <CheckCircle className="h-5 w-5" />;
+      case 'in-progress': return <PlayCircle className="h-5 w-5" />;
+      default: return <Circle className="h-5 w-5" />;
+    }
+  };
+
+  const getStatusColor = () => {
+    switch (task.status) {
+      case 'completed': return 'text-capacity-low';
+      case 'in-progress': return 'text-primary';
+      default: return 'text-muted-foreground';
+    }
+  };
+
+  const getStatusBadgeVariant = () => {
+    switch (task.status) {
+      case 'completed': return 'default' as const;
+      case 'in-progress': return 'outline' as const;
+      default: return 'secondary' as const;
+    }
+  };
+
   return (
     <div
       ref={setNodeRef}
@@ -50,7 +74,8 @@ function SortableTaskCard({ task, onMarkComplete }: SortableTaskCardProps) {
       className={cn(
         "p-4 rounded-xl border-2 border-border/50 bg-card shadow-card transition-all",
         isDragging && "opacity-50 shadow-elevated",
-        task.status === 'completed' && "opacity-60"
+        task.status === 'completed' && "opacity-60",
+        task.status === 'in-progress' && "border-primary/50"
       )}
     >
       <div className="flex items-start gap-3">
@@ -62,14 +87,14 @@ function SortableTaskCard({ task, onMarkComplete }: SortableTaskCardProps) {
             <div className="space-y-1 min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <h4 className={cn("font-semibold truncate", task.status === 'completed' && "line-through")}>{task.title}</h4>
-                <Badge variant={task.status === 'completed' ? 'default' : 'secondary'} className="shrink-0 rounded-lg">{task.status}</Badge>
+                <Badge variant={getStatusBadgeVariant()} className={cn("shrink-0 rounded-lg", task.status === 'in-progress' && "border-primary text-primary")}>{task.status}</Badge>
                 {task.is_self_assigned && <Badge variant="outline" className="shrink-0 rounded-lg">Self</Badge>}
               </div>
               {task.description && <p className="text-sm text-muted-foreground line-clamp-2">{task.description}</p>}
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", task.status === 'completed' ? "text-capacity-low" : "text-muted-foreground hover:text-capacity-low")} onClick={() => onMarkComplete(task)}>
-                <CheckCircle className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", getStatusColor())} onClick={() => onMarkComplete(task)} title="Click to change status">
+                {getStatusIcon()}
               </Button>
               <Badge variant="secondary" className="rounded-lg"><Clock className="h-3 w-3 mr-1" />{task.estimated_hours}h</Badge>
             </div>
@@ -120,7 +145,10 @@ export function TeammateView() {
     }
   };
 
-  const handleMarkComplete = (task: Task) => updateTask.mutate({ id: task.id, updates: { status: task.status === 'completed' ? 'pending' : 'completed' } });
+  const handleStatusChange = (task: Task) => {
+    const nextStatus = task.status === 'pending' ? 'in-progress' : task.status === 'in-progress' ? 'completed' : 'pending';
+    updateTask.mutate({ id: task.id, updates: { status: nextStatus } });
+  };
 
   const handleAddSelfTask = async () => {
     if (!myProfile || !newTaskTitle || !newTaskHours) return;
@@ -170,7 +198,7 @@ export function TeammateView() {
               <ScrollArea className="h-[300px] pr-4">
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                   <SortableContext items={tasksForSelectedDay.map(t => t.id)} strategy={verticalListSortingStrategy}>
-                    <div className="space-y-3">{tasksForSelectedDay.map((task) => <SortableTaskCard key={task.id} task={task} onMarkComplete={handleMarkComplete} />)}</div>
+                    <div className="space-y-3">{tasksForSelectedDay.map((task) => <SortableTaskCard key={task.id} task={task} onMarkComplete={handleStatusChange} />)}</div>
                   </SortableContext>
                 </DndContext>
               </ScrollArea>
