@@ -15,7 +15,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { SettingsModal } from '@/components/settings/SettingsModal';
-import { LayoutGrid, Users, Settings, LogOut, Bell, Calendar } from 'lucide-react';
+import { RaiseLeaveModal } from '@/components/leave/RaiseLeaveModal';
+import { LayoutGrid, Users, Settings, LogOut, Bell, Calendar, CalendarPlus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function Header() {
@@ -23,6 +24,7 @@ export function Header() {
   const location = useLocation();
   const { authUser, signOut, isOwner, isLeader } = useAuth();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [raiseLeaveOpen, setRaiseLeaveOpen] = useState(false);
   const { data: pendingRegistrations = [] } = usePendingRegistrations();
   const pendingCount = pendingRegistrations.length;
 
@@ -142,6 +144,10 @@ export function Header() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setRaiseLeaveOpen(true)} className="cursor-pointer rounded-lg">
+                <CalendarPlus className="mr-2 h-4 w-4" />
+                Raise Leave
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setSettingsOpen(true)} className="cursor-pointer rounded-lg">
                 <Settings className="mr-2 h-4 w-4" />
                 Settings
@@ -155,6 +161,7 @@ export function Header() {
           </DropdownMenu>
 
           <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
+          <RaiseLeaveModal open={raiseLeaveOpen} onOpenChange={setRaiseLeaveOpen} />
         </div>
       </div>
     </header>
