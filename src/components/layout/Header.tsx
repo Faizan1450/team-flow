@@ -15,7 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { SettingsModal } from '@/components/settings/SettingsModal';
-import { LayoutGrid, Users, Settings, LogOut, Bell } from 'lucide-react';
+import { LayoutGrid, Users, Settings, LogOut, Bell, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function Header() {
@@ -69,6 +69,18 @@ export function Header() {
               >
                 <LayoutGrid className="mr-2 h-4 w-4" />
                 Dashboard
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className={cn(
+                  "text-muted-foreground hover:text-foreground rounded-lg px-4",
+                  location.pathname === '/leave' && "text-foreground bg-secondary font-medium"
+                )}
+                onClick={() => navigate('/leave')}
+              >
+                <Calendar className="mr-2 h-4 w-4" />
+                Leave
               </Button>
               {isOwner && (
                 <>
