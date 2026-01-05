@@ -1,6 +1,7 @@
 import { format, parseISO } from 'date-fns';
 import { useTeammates } from '@/hooks/useTeammates';
 import { useTasks, useDeleteTask, useUpdateTask } from '@/hooks/useTasks';
+import { useTimeOff } from '@/hooks/useTimeOff';
 import {
   Dialog,
   DialogContent,
@@ -11,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, Clock, User, Trash2, CheckCircle, PlayCircle, Circle } from 'lucide-react';
+import { Plus, Clock, User, Trash2, CheckCircle, PlayCircle, Circle, CalendarOff } from 'lucide-react';
 import { calculateDayCapacity, getCapacityPercentage, getRemainingCapacity, getCapacityStatus } from '@/lib/capacity';
 import { cn } from '@/lib/utils';
 import { Task } from '@/types';
@@ -31,11 +32,17 @@ export function TaskDetailsModal({
 }: TaskDetailsModalProps) {
   const { data: teammates = [] } = useTeammates();
   const { data: tasks = [] } = useTasks();
+  const { data: timeOff = [] } = useTimeOff();
   const deleteTask = useDeleteTask();
   const updateTask = useUpdateTask();
   
   const teammate = teammates.find((t) => t.id === teammateId);
   const capacity = teammate ? calculateDayCapacity(teammate, date, tasks) : null;
+  
+  // Get approved leave for this date
+  const approvedLeave = timeOff.find(
+    (t) => t.teammate_id === teammateId && t.date === date && t.is_approved_leave
+  );
   
   if (!teammate || !capacity) return null;
 
@@ -106,6 +113,30 @@ export function TaskDetailsModal({
               <span>{remaining}h remaining</span>
             </div>
           </div>
+
+          {/* Approved Leave Block */}
+          {approvedLeave && (
+            <div className="p-4 rounded-lg border-2 border-amber-500/50 bg-amber-500/10">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-amber-500/20">
+                  <CalendarOff className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-amber-700 dark:text-amber-300">Approved Leave</span>
+                    <Badge variant="outline" className="border-amber-500/50 text-amber-600 dark:text-amber-400">
+                      {approvedLeave.hours || teammate.daily_capacity}h blocked
+                    </Badge>
+                  </div>
+                  {approvedLeave.reason && (
+                    <p className="text-sm text-amber-600/80 dark:text-amber-400/80 mt-1">
+                      {approvedLeave.reason}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Task List */}
           <div className="space-y-3">
