@@ -15,8 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { SettingsModal } from '@/components/settings/SettingsModal';
-import { RaiseLeaveModal } from '@/components/leave/RaiseLeaveModal';
-import { LayoutGrid, Users, Settings, LogOut, Bell, Calendar, CalendarPlus } from 'lucide-react';
+import { LayoutGrid, Users, Settings, LogOut, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function Header() {
@@ -24,7 +23,6 @@ export function Header() {
   const location = useLocation();
   const { authUser, signOut, isOwner, isLeader } = useAuth();
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [raiseLeaveOpen, setRaiseLeaveOpen] = useState(false);
   const { data: pendingRegistrations = [] } = usePendingRegistrations();
   const pendingCount = pendingRegistrations.length;
 
@@ -71,18 +69,6 @@ export function Header() {
               >
                 <LayoutGrid className="mr-2 h-4 w-4" />
                 Dashboard
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className={cn(
-                  "text-muted-foreground hover:text-foreground rounded-lg px-4",
-                  location.pathname === '/leave' && "text-foreground bg-secondary font-medium"
-                )}
-                onClick={() => navigate('/leave')}
-              >
-                <Calendar className="mr-2 h-4 w-4" />
-                Leave
               </Button>
               {isOwner && (
                 <>
@@ -144,10 +130,6 @@ export function Header() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setRaiseLeaveOpen(true)} className="cursor-pointer rounded-lg">
-                <CalendarPlus className="mr-2 h-4 w-4" />
-                Raise Leave
-              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setSettingsOpen(true)} className="cursor-pointer rounded-lg">
                 <Settings className="mr-2 h-4 w-4" />
                 Settings
@@ -161,7 +143,6 @@ export function Header() {
           </DropdownMenu>
 
           <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
-          <RaiseLeaveModal open={raiseLeaveOpen} onOpenChange={setRaiseLeaveOpen} />
         </div>
       </div>
     </header>
