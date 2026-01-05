@@ -54,78 +54,84 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let rolesSubscription: ReturnType<typeof supabase.channel> | null = null;
+    let isMounted = true;
+    let initialSessionHandled = false;
 
-    // Set up auth state listener first
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-
-        // Defer Supabase calls with setTimeout
-        if (session?.user) {
-          setTimeout(async () => {
-            const { profile, roles } = await fetchUserData(session.user.id);
-            setAuthUser({
-              id: session.user.id,
-              email: session.user.email || '',
-              profile,
-              roles
-            });
-            setLoading(false);
-          }, 0);
-        } else {
-          setAuthUser(null);
-          setLoading(false);
-        }
-      }
-    );
-
-    // Then check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    const setupRolesSubscription = (userId: string) => {
+      if (rolesSubscription) return; // Prevent duplicate subscriptions
       
-      if (session?.user) {
-        const userId = session.user.id;
-        
-        fetchUserData(userId).then(({ profile, roles }) => {
-          setAuthUser({
-            id: userId,
-            email: session.user.email || '',
-            profile,
-            roles
-          });
-          setLoading(false);
-        });
-
-        // Subscribe to role changes for the current user
-        rolesSubscription = supabase
-          .channel(`user-roles-${userId}`)
-          .on(
-            'postgres_changes',
-            {
-              event: '*',
-              schema: 'public',
-              table: 'user_roles',
-              filter: `user_id=eq.${userId}`
-            },
-            async () => {
-              console.log('Role change detected, refreshing user data...');
-              const { profile, roles } = await fetchUserData(userId);
+      rolesSubscription = supabase
+        .channel(`user-roles-${userId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'user_roles',
+            filter: `user_id=eq.${userId}`
+          },
+          async () => {
+            console.log('Role change detected, refreshing user data...');
+            const { profile, roles } = await fetchUserData(userId);
+            if (isMounted) {
               setAuthUser(prev => prev ? {
                 ...prev,
                 profile,
                 roles
               } : null);
             }
-          )
-          .subscribe();
+          }
+        )
+        .subscribe();
+    };
+
+    const handleSession = async (session: Session | null, isInitial: boolean = false) => {
+      if (!isMounted) return;
+      
+      // Skip if this is from getSession and we already handled via onAuthStateChange
+      if (isInitial && initialSessionHandled) return;
+      if (!isInitial) initialSessionHandled = true;
+
+      setSession(session);
+      setUser(session?.user ?? null);
+
+      if (session?.user) {
+        const { profile, roles } = await fetchUserData(session.user.id);
+        if (isMounted) {
+          setAuthUser({
+            id: session.user.id,
+            email: session.user.email || '',
+            profile,
+            roles
+          });
+          setLoading(false);
+          setupRolesSubscription(session.user.id);
+        }
       } else {
-        setLoading(false);
+        if (isMounted) {
+          setAuthUser(null);
+          setLoading(false);
+        }
       }
+    };
+
+    // Set up auth state listener first
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        // Use setTimeout to avoid Supabase deadlock
+        setTimeout(() => {
+          handleSession(session);
+        }, 0);
+      }
+    );
+
+    // Then check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      handleSession(session, true);
     });
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
       if (rolesSubscription) {
         supabase.removeChannel(rolesSubscription);
