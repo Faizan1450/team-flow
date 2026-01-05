@@ -131,7 +131,7 @@ export function TeammateView() {
   const myTasks = useMemo(() => myProfile ? allTasks.filter((t) => t.assigned_to === myProfile.id) : [], [allTasks, myProfile?.id]);
   const dates = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStartDate, i)), [weekStartDate]);
   const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
-  const capacity = myProfile ? calculateDayCapacity(myProfile, selectedDateStr, allTasks) : null;
+  const capacity = myProfile ? calculateDayCapacity(myProfile, selectedDateStr, allTasks, timeOff) : null;
   const percentage = capacity ? getCapacityPercentage(capacity) : 0;
   const status = capacity ? getCapacityStatus(capacity) : 'empty';
   const tasksForSelectedDay = useMemo(() => myTasks.filter((t) => t.date === selectedDateStr).sort((a, b) => a.sort_order - b.sort_order), [myTasks, selectedDateStr]);
@@ -201,7 +201,7 @@ export function TeammateView() {
         <div className="flex gap-2 overflow-x-auto pb-2 flex-1">
           {dates.map((date) => {
             const dateStr = format(date, 'yyyy-MM-dd');
-            const dayCapacity = calculateDayCapacity(myProfile, dateStr, allTasks);
+            const dayCapacity = calculateDayCapacity(myProfile, dateStr, allTasks, timeOff);
             const dayStatus = getCapacityStatus(dayCapacity);
             const dayPercentage = getCapacityPercentage(dayCapacity);
             return (
