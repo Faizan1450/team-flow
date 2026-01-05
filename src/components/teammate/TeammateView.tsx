@@ -20,6 +20,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMyTeammateProfile } from '@/hooks/useTeammates';
 import { useTasks, useCreateTask, useUpdateTask, useUpdateTaskOrder } from '@/hooks/useTasks';
+import { useTeammateLeaveBalance, useLeaveRequests, useCreateLeaveRequest } from '@/hooks/useLeaveManagement';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -29,10 +30,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Clock, User, Calendar, Plus, GripVertical, CheckCircle, Loader2, PlayCircle, Circle } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { Clock, User, Calendar, Plus, GripVertical, CheckCircle, Loader2, PlayCircle, Circle, CalendarDays, Thermometer, CalendarIcon } from 'lucide-react';
 import { calculateDayCapacity, getCapacityPercentage, getCapacityStatus } from '@/lib/capacity';
 import { cn } from '@/lib/utils';
 import { Task } from '@/types';
+import { differenceInDays } from 'date-fns';
 
 interface SortableTaskCardProps {
   task: Task;
@@ -117,21 +122,37 @@ export function TeammateView() {
   const updateTask = useUpdateTask();
   const updateTaskOrder = useUpdateTaskOrder();
   
+  // Leave management hooks
+  const { data: leaveBalance } = useTeammateLeaveBalance(myProfile?.id || '');
+  const { data: allLeaveRequests = [] } = useLeaveRequests();
+  const createLeaveRequest = useCreateLeaveRequest();
+  
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showAddTask, setShowAddTask] = useState(false);
+  const [showLeaveRequest, setShowLeaveRequest] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDescription, setNewTaskDescription] = useState('');
   const [newTaskHours, setNewTaskHours] = useState('');
+  
+  // Leave request form state
+  const [leaveType, setLeaveType] = useState<'casual' | 'sick' | 'comp_off'>('casual');
+  const [leaveStartDate, setLeaveStartDate] = useState<Date>();
+  const [leaveEndDate, setLeaveEndDate] = useState<Date>();
+  const [leaveReason, setLeaveReason] = useState('');
 
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
 
   const myTasks = useMemo(() => myProfile ? allTasks.filter((t) => t.assigned_to === myProfile.id) : [], [allTasks, myProfile?.id]);
+  const myLeaveRequests = useMemo(() => myProfile ? allLeaveRequests.filter((r) => r.teammate_id === myProfile.id) : [], [allLeaveRequests, myProfile?.id]);
   const dates = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(new Date(), i)), []);
   const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
   const capacity = myProfile ? calculateDayCapacity(myProfile, selectedDateStr, allTasks) : null;
   const percentage = capacity ? getCapacityPercentage(capacity) : 0;
   const status = capacity ? getCapacityStatus(capacity) : 'empty';
   const tasksForSelectedDay = useMemo(() => myTasks.filter((t) => t.date === selectedDateStr).sort((a, b) => a.sort_order - b.sort_order), [myTasks, selectedDateStr]);
+  
+  const leaveDaysCount = leaveStartDate && leaveEndDate ? differenceInDays(leaveEndDate, leaveStartDate) + 1 : 0;
+  const currentYear = new Date().getFullYear();
 
   const statusColors = { low: 'text-capacity-low', medium: 'text-capacity-medium', high: 'text-capacity-high', empty: 'text-muted-foreground' };
 
@@ -156,12 +177,100 @@ export function TeammateView() {
     setNewTaskTitle(''); setNewTaskDescription(''); setNewTaskHours(''); setShowAddTask(false);
   };
 
+  const handleRequestLeave = async () => {
+    if (!myProfile || !leaveStartDate || !leaveEndDate) return;
+    await createLeaveRequest.mutateAsync({
+      teammateId: myProfile.id,
+      leaveType,
+      startDate: format(leaveStartDate, 'yyyy-MM-dd'),
+      endDate: format(leaveEndDate, 'yyyy-MM-dd'),
+      daysCount: leaveDaysCount,
+      reason: leaveReason || undefined
+    });
+    setLeaveType('casual');
+    setLeaveStartDate(undefined);
+    setLeaveEndDate(undefined);
+    setLeaveReason('');
+    setShowLeaveRequest(false);
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">Pending</Badge>;
+      case 'approved':
+        return <Badge className="bg-green-500/10 text-green-600 border-green-500/20">Approved</Badge>;
+      case 'rejected':
+        return <Badge className="bg-destructive/10 text-destructive border-destructive/20">Rejected</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
   if (loadingProfile || loadingTasks) return <Card className="flex items-center justify-center h-64 shadow-card rounded-2xl"><Loader2 className="h-8 w-8 animate-spin text-primary" /></Card>;
   if (!myProfile) return <Card className="flex flex-col items-center justify-center h-64 text-muted-foreground shadow-card rounded-2xl"><p className="text-lg mb-2 font-medium">No teammate profile found</p><p className="text-sm">Contact your team owner to set up your profile</p></Card>;
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="space-y-2"><h1 className="text-3xl font-bold">Welcome back, {myProfile.name.split(' ')[0]}</h1><p className="text-muted-foreground text-lg">Here's your schedule for the upcoming days</p></div>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold">Welcome back, {myProfile.name.split(' ')[0]}</h1>
+          <p className="text-muted-foreground text-lg">Here's your schedule for the upcoming days</p>
+        </div>
+        <Button onClick={() => setShowLeaveRequest(true)} variant="outline" className="rounded-xl">
+          <CalendarDays className="mr-2 h-4 w-4" />
+          Request Leave
+        </Button>
+      </div>
+
+      {/* Leave Balance Card */}
+      <Card className="shadow-card rounded-2xl">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base">My Leave Balance</CardTitle>
+            <Badge variant="outline">{currentYear}</Badge>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="flex flex-col items-center p-4 rounded-xl bg-primary/10 border border-primary/20">
+              <Calendar className="h-5 w-5 text-primary mb-2" />
+              <span className="text-2xl font-bold text-primary">{leaveBalance ? Number(leaveBalance.casual_leave_balance) : 0}</span>
+              <span className="text-xs text-muted-foreground">Casual</span>
+            </div>
+            <div className="flex flex-col items-center p-4 rounded-xl bg-orange-500/10 border border-orange-500/20">
+              <Thermometer className="h-5 w-5 text-orange-500 mb-2" />
+              <span className="text-2xl font-bold text-orange-500">{leaveBalance ? Number(leaveBalance.sick_leave_balance) : 0}</span>
+              <span className="text-xs text-muted-foreground">Sick</span>
+            </div>
+            <div className="flex flex-col items-center p-4 rounded-xl bg-accent/10 border border-accent/20">
+              <Clock className="h-5 w-5 text-accent mb-2" />
+              <span className="text-2xl font-bold text-accent">{leaveBalance ? Number(leaveBalance.comp_off_balance) : 0}</span>
+              <span className="text-xs text-muted-foreground">Comp Off</span>
+            </div>
+          </div>
+          
+          {/* Recent Leave Requests */}
+          {myLeaveRequests.length > 0 && (
+            <div className="mt-4 pt-4 border-t">
+              <p className="text-sm font-medium mb-2">Recent Requests</p>
+              <div className="space-y-2">
+                {myLeaveRequests.slice(0, 3).map((req) => (
+                  <div key={req.id} className="flex items-center justify-between text-sm p-2 rounded-lg bg-muted/50">
+                    <div className="flex items-center gap-2">
+                      <span className="capitalize">{req.leave_type.replace('_', ' ')}</span>
+                      <span className="text-muted-foreground">
+                        {format(new Date(req.start_date), 'MMM d')} - {format(new Date(req.end_date), 'MMM d')}
+                      </span>
+                    </div>
+                    {getStatusBadge(req.status)}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="flex gap-2 overflow-x-auto pb-2">
         {dates.map((date) => {
@@ -211,6 +320,120 @@ export function TeammateView() {
         <DialogContent className="rounded-2xl"><DialogHeader><DialogTitle className="text-xl font-bold">Add Your Own Task</DialogTitle></DialogHeader>
           <div className="space-y-4"><div className="space-y-2"><Label>Task Title</Label><Input placeholder="What did you work on?" value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)} className="h-11 rounded-xl" /></div><div className="space-y-2"><Label>Description (optional)</Label><Textarea placeholder="Brief description" value={newTaskDescription} onChange={(e) => setNewTaskDescription(e.target.value)} rows={2} className="rounded-xl" /></div><div className="space-y-2"><Label>Hours Spent</Label><Input type="number" min="0.5" max="24" step="0.5" placeholder="e.g., 2" value={newTaskHours} onChange={(e) => setNewTaskHours(e.target.value)} className="h-11 rounded-xl" /></div></div>
           <DialogFooter className="gap-2"><Button variant="outline" onClick={() => setShowAddTask(false)} className="rounded-xl">Cancel</Button><Button onClick={handleAddSelfTask} disabled={!newTaskTitle || !newTaskHours || createTask.isPending} className="rounded-xl shadow-lg shadow-primary/25">{createTask.isPending ? 'Adding...' : 'Add Task'}</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Leave Request Dialog */}
+      <Dialog open={showLeaveRequest} onOpenChange={setShowLeaveRequest}>
+        <DialogContent className="rounded-2xl sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">Request Leave</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Leave Type</Label>
+              <Select value={leaveType} onValueChange={(v) => setLeaveType(v as typeof leaveType)}>
+                <SelectTrigger className="rounded-xl">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="casual">Casual Leave ({leaveBalance ? Number(leaveBalance.casual_leave_balance) : 0} available)</SelectItem>
+                  <SelectItem value="sick">Sick Leave ({leaveBalance ? Number(leaveBalance.sick_leave_balance) : 0} available)</SelectItem>
+                  <SelectItem value="comp_off">Comp Off ({leaveBalance ? Number(leaveBalance.comp_off_balance) : 0} available)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Start Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal rounded-xl",
+                        !leaveStartDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {leaveStartDate ? format(leaveStartDate, "MMM d") : "Pick date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={leaveStartDate}
+                      onSelect={(date) => {
+                        setLeaveStartDate(date);
+                        if (date && (!leaveEndDate || leaveEndDate < date)) {
+                          setLeaveEndDate(date);
+                        }
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div className="space-y-2">
+                <Label>End Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal rounded-xl",
+                        !leaveEndDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {leaveEndDate ? format(leaveEndDate, "MMM d") : "Pick date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={leaveEndDate}
+                      onSelect={setLeaveEndDate}
+                      disabled={(date) => leaveStartDate ? date < leaveStartDate : false}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+
+            {leaveDaysCount > 0 && (
+              <div className="text-sm text-muted-foreground text-center py-2 bg-muted rounded-lg">
+                {leaveDaysCount} day{leaveDaysCount !== 1 ? 's' : ''} of leave
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label>Reason (optional)</Label>
+              <Textarea
+                value={leaveReason}
+                onChange={(e) => setLeaveReason(e.target.value)}
+                placeholder="Enter reason for leave..."
+                rows={3}
+                className="rounded-xl"
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowLeaveRequest(false)} className="rounded-xl">
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleRequestLeave} 
+              disabled={!leaveStartDate || !leaveEndDate || createLeaveRequest.isPending}
+              className="rounded-xl shadow-lg shadow-primary/25"
+            >
+              {createLeaveRequest.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Submit Request
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
