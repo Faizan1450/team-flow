@@ -19,28 +19,30 @@ export function calculateDayCapacity(
   const hasTimeOff = !!timeOffEntry;
   // Check if it's a partial leave (has hours specified)
   const leaveHours = timeOffEntry?.hours ?? null;
+  // Check if it's a full day off (no hours specified or hours >= daily capacity)
+  const isFullDayOff = hasTimeOff && (leaveHours === null || leaveHours >= teammate.daily_capacity);
   
   const dayTasks = tasks.filter(
     (task) => task.assigned_to === teammate.id && task.date === date
   );
   
-  const usedCapacity = dayTasks.reduce((sum, task) => sum + task.estimated_hours, 0);
+  const taskHours = dayTasks.reduce((sum, task) => sum + task.estimated_hours, 0);
   
-  // Calculate total capacity considering partial leaves
+  // Calculate total capacity - only 0 for non-working days or full day off
   let totalCapacity = 0;
   if (!isWorkingDay) {
     totalCapacity = 0;
-  } else if (hasTimeOff) {
-    // If partial leave, reduce capacity by leave hours
-    if (leaveHours !== null && leaveHours < teammate.daily_capacity) {
-      totalCapacity = teammate.daily_capacity - leaveHours;
-    } else {
-      // Full day off
-      totalCapacity = 0;
-    }
+  } else if (isFullDayOff) {
+    // Full day off - no capacity
+    totalCapacity = 0;
   } else {
+    // Normal working day or partial leave - keep full daily capacity
     totalCapacity = teammate.daily_capacity;
   }
+  
+  // Used capacity = task hours + leave hours (for partial leave)
+  const leaveUsedHours = (hasTimeOff && !isFullDayOff && leaveHours !== null) ? leaveHours : 0;
+  const usedCapacity = taskHours + leaveUsedHours;
   
   return {
     date,
