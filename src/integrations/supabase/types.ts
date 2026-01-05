@@ -148,7 +148,7 @@ export type Database = {
           hours_requested?: number | null
           id?: string
           is_partial?: boolean | null
-          leave_type: string
+          leave_type?: string
           reason?: string | null
           requested_by?: string | null
           reviewed_at?: string | null
