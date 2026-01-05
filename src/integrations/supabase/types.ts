@@ -14,6 +14,156 @@ export type Database = {
   }
   public: {
     Tables: {
+      comp_off_requests: {
+        Row: {
+          created_at: string
+          days_earned: number
+          hours_worked: number
+          id: string
+          reason: string
+          requested_by: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          teammate_id: string
+          updated_at: string
+          work_date: string
+        }
+        Insert: {
+          created_at?: string
+          days_earned: number
+          hours_worked: number
+          id?: string
+          reason: string
+          requested_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          teammate_id: string
+          updated_at?: string
+          work_date: string
+        }
+        Update: {
+          created_at?: string
+          days_earned?: number
+          hours_worked?: number
+          id?: string
+          reason?: string
+          requested_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          teammate_id?: string
+          updated_at?: string
+          work_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comp_off_requests_teammate_id_fkey"
+            columns: ["teammate_id"]
+            isOneToOne: false
+            referencedRelation: "teammates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leave_balances: {
+        Row: {
+          casual_leave_balance: number
+          comp_off_balance: number
+          created_at: string
+          id: string
+          sick_leave_balance: number
+          teammate_id: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          casual_leave_balance?: number
+          comp_off_balance?: number
+          created_at?: string
+          id?: string
+          sick_leave_balance?: number
+          teammate_id: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          casual_leave_balance?: number
+          comp_off_balance?: number
+          created_at?: string
+          id?: string
+          sick_leave_balance?: number
+          teammate_id?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leave_balances_teammate_id_fkey"
+            columns: ["teammate_id"]
+            isOneToOne: false
+            referencedRelation: "teammates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leave_requests: {
+        Row: {
+          created_at: string
+          days_count: number
+          end_date: string
+          id: string
+          leave_type: string
+          reason: string | null
+          requested_by: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          start_date: string
+          status: string
+          teammate_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          days_count: number
+          end_date: string
+          id?: string
+          leave_type: string
+          reason?: string | null
+          requested_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          start_date: string
+          status?: string
+          teammate_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          days_count?: number
+          end_date?: string
+          id?: string
+          leave_type?: string
+          reason?: string | null
+          requested_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          start_date?: string
+          status?: string
+          teammate_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leave_requests_teammate_id_fkey"
+            columns: ["teammate_id"]
+            isOneToOne: false
+            referencedRelation: "teammates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pending_registrations: {
         Row: {
           created_at: string
@@ -261,6 +411,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_comp_off_request: {
+        Args: { _request_id: string }
+        Returns: undefined
+      }
+      approve_leave_request: {
+        Args: { _request_id: string }
+        Returns: undefined
+      }
       approve_registration: {
         Args: {
           _daily_capacity?: number
@@ -270,6 +428,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      credit_monthly_leave: { Args: never; Returns: undefined }
       demote_to_teammate: {
         Args: {
           _daily_capacity?: number
