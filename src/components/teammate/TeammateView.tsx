@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { format, addDays, isToday } from 'date-fns';
+import { format, addDays, subDays, startOfWeek, isToday, isSameDay } from 'date-fns';
 import {
   DndContext,
   closestCenter,
@@ -29,7 +29,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Clock, User, Calendar, Plus, GripVertical, CheckCircle, Loader2, PlayCircle, Circle } from 'lucide-react';
+import { Clock, User, Calendar, Plus, GripVertical, CheckCircle, Loader2, PlayCircle, Circle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { calculateDayCapacity, getCapacityPercentage, getCapacityStatus } from '@/lib/capacity';
 import { cn } from '@/lib/utils';
 import { Task } from '@/types';
@@ -118,6 +118,7 @@ export function TeammateView() {
   const updateTaskOrder = useUpdateTaskOrder();
   
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [weekStartDate, setWeekStartDate] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [showAddTask, setShowAddTask] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDescription, setNewTaskDescription] = useState('');
@@ -126,12 +127,32 @@ export function TeammateView() {
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
 
   const myTasks = useMemo(() => myProfile ? allTasks.filter((t) => t.assigned_to === myProfile.id) : [], [allTasks, myProfile?.id]);
-  const dates = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(new Date(), i)), []);
+  const dates = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStartDate, i)), [weekStartDate]);
   const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
   const capacity = myProfile ? calculateDayCapacity(myProfile, selectedDateStr, allTasks) : null;
   const percentage = capacity ? getCapacityPercentage(capacity) : 0;
   const status = capacity ? getCapacityStatus(capacity) : 'empty';
   const tasksForSelectedDay = useMemo(() => myTasks.filter((t) => t.date === selectedDateStr).sort((a, b) => a.sort_order - b.sort_order), [myTasks, selectedDateStr]);
+
+  const goToPreviousWeek = () => {
+    const newStart = subDays(weekStartDate, 7);
+    setWeekStartDate(newStart);
+    setSelectedDate(newStart);
+  };
+
+  const goToNextWeek = () => {
+    const newStart = addDays(weekStartDate, 7);
+    setWeekStartDate(newStart);
+    setSelectedDate(newStart);
+  };
+
+  const goToCurrentWeek = () => {
+    const today = new Date();
+    setWeekStartDate(startOfWeek(today, { weekStartsOn: 1 }));
+    setSelectedDate(today);
+  };
+
+  const isCurrentWeek = isSameDay(weekStartDate, startOfWeek(new Date(), { weekStartsOn: 1 }));
 
   const statusColors = { low: 'text-capacity-low', medium: 'text-capacity-medium', high: 'text-capacity-high', empty: 'text-muted-foreground' };
 
@@ -163,20 +184,36 @@ export function TeammateView() {
     <div className="space-y-6 animate-fade-in">
       <div className="space-y-2"><h1 className="text-3xl font-bold">Welcome back, {myProfile.name.split(' ')[0]}</h1><p className="text-muted-foreground text-lg">Here's your schedule for the upcoming days</p></div>
 
-      <div className="flex gap-2 overflow-x-auto pb-2">
-        {dates.map((date) => {
-          const dateStr = format(date, 'yyyy-MM-dd');
-          const dayCapacity = calculateDayCapacity(myProfile, dateStr, allTasks);
-          const dayStatus = getCapacityStatus(dayCapacity);
-          const dayPercentage = getCapacityPercentage(dayCapacity);
-          return (
-            <button key={dateStr} onClick={() => setSelectedDate(date)} className={cn('flex flex-col items-center min-w-[80px] p-3 rounded-xl border-2 transition-all shadow-card', dateStr === selectedDateStr ? 'border-primary bg-primary/5' : 'border-border/50 hover:border-primary/50 bg-card', isToday(date) && dateStr !== selectedDateStr && 'ring-2 ring-primary/30')}>
-              <span className="text-xs font-medium text-muted-foreground uppercase">{format(date, 'EEE')}</span>
-              <span className={cn('text-xl font-bold', isToday(date) && 'text-primary')}>{format(date, 'd')}</span>
-              <div className="w-full h-1.5 rounded-full bg-muted mt-2 overflow-hidden"><div className={cn('h-full rounded-full', dayStatus === 'low' && 'bg-capacity-low', dayStatus === 'medium' && 'bg-capacity-medium', dayStatus === 'high' && 'bg-capacity-high', dayStatus === 'empty' && 'bg-muted-foreground/30')} style={{ width: `${dayPercentage}%` }} /></div>
-            </button>
-          );
-        })}
+      <div className="flex items-center gap-2">
+        <Button variant="outline" size="icon" onClick={goToPreviousWeek} className="shrink-0 rounded-xl h-10 w-10">
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        
+        <div className="flex gap-2 overflow-x-auto pb-2 flex-1">
+          {dates.map((date) => {
+            const dateStr = format(date, 'yyyy-MM-dd');
+            const dayCapacity = calculateDayCapacity(myProfile, dateStr, allTasks);
+            const dayStatus = getCapacityStatus(dayCapacity);
+            const dayPercentage = getCapacityPercentage(dayCapacity);
+            return (
+              <button key={dateStr} onClick={() => setSelectedDate(date)} className={cn('flex flex-col items-center min-w-[80px] p-3 rounded-xl border-2 transition-all shadow-card', dateStr === selectedDateStr ? 'border-primary bg-primary/5' : 'border-border/50 hover:border-primary/50 bg-card', isToday(date) && dateStr !== selectedDateStr && 'ring-2 ring-primary/30')}>
+                <span className="text-xs font-medium text-muted-foreground uppercase">{format(date, 'EEE')}</span>
+                <span className={cn('text-xl font-bold', isToday(date) && 'text-primary')}>{format(date, 'd')}</span>
+                <div className="w-full h-1.5 rounded-full bg-muted mt-2 overflow-hidden"><div className={cn('h-full rounded-full', dayStatus === 'low' && 'bg-capacity-low', dayStatus === 'medium' && 'bg-capacity-medium', dayStatus === 'high' && 'bg-capacity-high', dayStatus === 'empty' && 'bg-muted-foreground/30')} style={{ width: `${dayPercentage}%` }} /></div>
+              </button>
+            );
+          })}
+        </div>
+        
+        <Button variant="outline" size="icon" onClick={goToNextWeek} className="shrink-0 rounded-xl h-10 w-10">
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+        
+        {!isCurrentWeek && (
+          <Button variant="secondary" size="sm" onClick={goToCurrentWeek} className="shrink-0 rounded-xl">
+            Today
+          </Button>
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
