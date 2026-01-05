@@ -37,7 +37,7 @@ export function TaskDetailsModal({
   const updateTask = useUpdateTask();
   
   const teammate = teammates.find((t) => t.id === teammateId);
-  const capacity = teammate ? calculateDayCapacity(teammate, date, tasks) : null;
+  const capacity = teammate ? calculateDayCapacity(teammate, date, tasks, timeOff) : null;
   
   // Get approved leave for this date
   const approvedLeave = timeOff.find(
