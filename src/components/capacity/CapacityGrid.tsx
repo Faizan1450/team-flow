@@ -91,17 +91,17 @@ export function CapacityGrid() {
   }
 
   return (
-    <div className="space-y-4 md:space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       {/* Header Controls */}
-      <Card className="p-3 md:p-4 shadow-card rounded-2xl">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-          <div className="flex items-center gap-2 md:gap-3">
+      <Card className="p-4 shadow-card rounded-2xl">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
             <div className="flex items-center gap-1 bg-secondary rounded-xl p-1">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => navigateDays('prev')}
-                className="h-8 w-8 md:h-9 md:w-9 rounded-lg"
+                className="h-9 w-9 rounded-lg"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -109,19 +109,19 @@ export function CapacityGrid() {
                 variant="ghost"
                 size="icon"
                 onClick={() => navigateDays('next')}
-                className="h-8 w-8 md:h-9 md:w-9 rounded-lg"
+                className="h-9 w-9 rounded-lg"
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
-            <div className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm">
-              <Calendar className="h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground" />
+            <div className="flex items-center gap-2 text-sm">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
               <span className="font-medium">
-                {format(startDate, 'MMM d')} - {format(addDays(startDate, VISIBLE_DAYS - 1), 'MMM d')}
+                {format(startDate, 'MMM d')} - {format(addDays(startDate, VISIBLE_DAYS - 1), 'MMM d, yyyy')}
               </span>
             </div>
           </div>
-          <Button onClick={() => setShowAddTask(true)} className="rounded-xl shadow-lg shadow-primary/25 w-full sm:w-auto text-sm">
+          <Button onClick={() => setShowAddTask(true)} className="rounded-xl shadow-lg shadow-primary/25">
             <Plus className="mr-2 h-4 w-4" />
             Assign Task
           </Button>
@@ -131,25 +131,25 @@ export function CapacityGrid() {
       {/* Grid */}
       <Card className="shadow-card rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
-          <div className="min-w-[600px] md:min-w-max">
+          <div className="min-w-max">
             {/* Date Headers */}
-            <div className="grid border-b border-border bg-secondary/50" style={{ gridTemplateColumns: `140px md:220px repeat(${VISIBLE_DAYS}, minmax(70px, 1fr))` }}>
-              <div className="p-2 md:p-4 font-semibold text-xs md:text-sm text-muted-foreground">
+            <div className="grid border-b border-border bg-secondary/50" style={{ gridTemplateColumns: `220px repeat(${VISIBLE_DAYS}, 1fr)` }}>
+              <div className="p-4 font-semibold text-sm text-muted-foreground">
                 Team Member
               </div>
               {dates.map((date) => (
                 <div
                   key={date.toISOString()}
                   className={cn(
-                    'p-2 md:p-3 text-center border-l border-border/50',
+                    'p-3 text-center border-l border-border/50',
                     isToday(date) && 'bg-primary/5'
                   )}
                 >
-                  <div className="text-[10px] md:text-xs font-medium text-muted-foreground uppercase">
+                  <div className="text-xs font-medium text-muted-foreground uppercase">
                     {format(date, 'EEE')}
                   </div>
                   <div className={cn(
-                    'text-sm md:text-lg font-bold',
+                    'text-lg font-bold',
                     isToday(date) && 'text-primary'
                   )}>
                     {format(date, 'd')}
@@ -166,19 +166,19 @@ export function CapacityGrid() {
                   "grid border-b border-border/50 last:border-b-0 transition-colors",
                   "hover:bg-secondary/30"
                 )}
-                style={{ gridTemplateColumns: `140px md:220px repeat(${VISIBLE_DAYS}, minmax(70px, 1fr))` }}
+                style={{ gridTemplateColumns: `220px repeat(${VISIBLE_DAYS}, 1fr)` }}
               >
                 {/* Teammate Info */}
-                <div className="p-2 md:p-4 flex items-center gap-2 md:gap-3">
-                  <Avatar className="h-8 w-8 md:h-10 md:w-10 ring-2 ring-border shrink-0">
-                    <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground text-xs md:text-sm font-semibold">
+                <div className="p-4 flex items-center gap-3">
+                  <Avatar className="h-10 w-10 ring-2 ring-border">
+                    <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground text-sm font-semibold">
                       {getInitials(teammate.name)}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="min-w-0 hidden sm:block">
-                    <div className="text-xs md:text-sm font-semibold truncate">{teammate.name}</div>
-                    <div className="text-[10px] md:text-xs text-muted-foreground truncate">
-                      {teammate.job_role} · {teammate.daily_capacity}h
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold truncate">{teammate.name}</div>
+                    <div className="text-xs text-muted-foreground truncate">
+                      {teammate.job_role} · {teammate.daily_capacity}h/day
                     </div>
                   </div>
                 </div>
@@ -193,7 +193,7 @@ export function CapacityGrid() {
                     <div
                       key={dateStr}
                       className={cn(
-                        'p-1 md:p-1.5 border-l border-border/50',
+                        'p-1.5 border-l border-border/50',
                         isToday(date) && 'bg-primary/5'
                       )}
                     >
@@ -213,24 +213,24 @@ export function CapacityGrid() {
       </Card>
 
       {/* Legend */}
-      <Card className="p-3 md:p-4 shadow-card rounded-2xl">
-        <div className="flex flex-wrap items-center gap-3 md:gap-8 text-xs md:text-sm">
-          <span className="text-muted-foreground font-medium w-full sm:w-auto">Capacity:</span>
-          <div className="flex items-center gap-1.5 md:gap-2">
-            <div className="w-3 h-3 md:w-4 md:h-4 rounded-md bg-capacity-low/30 border border-capacity-low/50" />
-            <span>&lt;70%</span>
+      <Card className="p-4 shadow-card rounded-2xl">
+        <div className="flex items-center gap-8 text-sm">
+          <span className="text-muted-foreground font-medium">Capacity:</span>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-md bg-capacity-low/30 border border-capacity-low/50" />
+            <span>Under 70%</span>
           </div>
-          <div className="flex items-center gap-1.5 md:gap-2">
-            <div className="w-3 h-3 md:w-4 md:h-4 rounded-md bg-capacity-medium/30 border border-capacity-medium/50" />
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-md bg-capacity-medium/30 border border-capacity-medium/50" />
             <span>70-90%</span>
           </div>
-          <div className="flex items-center gap-1.5 md:gap-2">
-            <div className="w-3 h-3 md:w-4 md:h-4 rounded-md bg-capacity-high/30 border border-capacity-high/50" />
-            <span>&gt;90%</span>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-md bg-capacity-high/30 border border-capacity-high/50" />
+            <span>Over 90%</span>
           </div>
-          <div className="flex items-center gap-1.5 md:gap-2">
-            <div className="w-3 h-3 md:w-4 md:h-4 rounded-md bg-muted border border-border" />
-            <span>Empty</span>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-md bg-muted border border-border" />
+            <span>Empty / Non-working</span>
           </div>
         </div>
       </Card>
