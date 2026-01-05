@@ -28,6 +28,7 @@ export default function Auth() {
   const { signIn, signUp, user, loading } = useAuth();
   
   const [isLoading, setIsLoading] = useState(false);
+  const [loginSuccess, setLoginSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   
@@ -59,14 +60,17 @@ export default function Auth() {
 
     setIsLoading(true);
     const { error } = await signIn(loginEmail, loginPassword);
-    setIsLoading(false);
 
     if (error) {
+      setIsLoading(false);
       if (error.message.includes('Invalid login credentials')) {
         setError('Invalid email or password');
       } else {
         setError(error.message);
       }
+    } else {
+      // Login successful - show loading state while auth context updates
+      setLoginSuccess(true);
     }
   };
 
@@ -106,7 +110,7 @@ export default function Auth() {
     }
   };
 
-  if (loading) {
+  if (loading || loginSuccess) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
