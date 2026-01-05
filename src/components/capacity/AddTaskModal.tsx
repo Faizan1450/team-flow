@@ -3,6 +3,7 @@ import { format, parseISO, addDays } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTeammates } from '@/hooks/useTeammates';
 import { useTasks, useCreateTask } from '@/hooks/useTasks';
+import { useTimeOff } from '@/hooks/useTimeOff';
 import { useCreateRecurringTask } from '@/hooks/useRecurringTasks';
 import { RecurrenceType } from '@/types';
 import {
@@ -51,6 +52,7 @@ export function AddTaskModal({
   const { authUser } = useAuth();
   const { data: teammates = [] } = useTeammates();
   const { data: tasks = [] } = useTasks();
+  const { data: timeOff = [] } = useTimeOff();
   const createTask = useCreateTask();
   const createRecurringTask = useCreateRecurringTask();
   
@@ -81,14 +83,14 @@ export function AddTaskModal({
       const teammate = teammates.find((t) => t.id === teammateId);
       if (teammate) {
         const dateStr = format(date, 'yyyy-MM-dd');
-        const capacity = calculateDayCapacity(teammate, dateStr, tasks);
+        const capacity = calculateDayCapacity(teammate, dateStr, tasks, timeOff);
         const result = canAssignTask(capacity, parseFloat(estimatedHours));
         setValidationResult(result);
       }
     } else {
       setValidationResult(null);
     }
-  }, [teammateId, date, estimatedHours, teammates, tasks]);
+  }, [teammateId, date, estimatedHours, teammates, tasks, timeOff]);
 
   const handleSubmit = async () => {
     if (!authUser || !title || !teammateId || !date || !estimatedHours) return;
@@ -143,7 +145,7 @@ export function AddTaskModal({
 
   const selectedTeammate = teammates.find((t) => t.id === teammateId);
   const remainingCapacity = selectedTeammate && date
-    ? getRemainingCapacity(calculateDayCapacity(selectedTeammate, format(date, 'yyyy-MM-dd'), tasks))
+    ? getRemainingCapacity(calculateDayCapacity(selectedTeammate, format(date, 'yyyy-MM-dd'), tasks, timeOff))
     : null;
 
   return (
