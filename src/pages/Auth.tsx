@@ -25,7 +25,7 @@ const signupSchema = z.object({
 
 export default function Auth() {
   const navigate = useNavigate();
-  const { signIn, signUp, user, loading } = useAuth();
+  const { signIn, signUp, user, authUser, loading } = useAuth();
   
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,10 +42,11 @@ export default function Auth() {
   const [signupFullName, setSignupFullName] = useState('');
 
   useEffect(() => {
-    if (user && !loading) {
+    // Only navigate when authUser is fully loaded (not just user)
+    if (authUser && !loading) {
       navigate('/');
     }
-  }, [user, loading, navigate]);
+  }, [authUser, loading, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,7 +107,8 @@ export default function Auth() {
     }
   };
 
-  if (loading) {
+  // Show loading while auth is initializing OR while user exists but authUser is still loading
+  if (loading || (user && !authUser)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
