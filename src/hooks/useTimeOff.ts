@@ -7,7 +7,10 @@ export interface TimeOff {
   id: string;
   teammate_id: string;
   date: string;
+  hours?: number | null;
   reason?: string;
+  is_approved_leave?: boolean;
+  leave_request_id?: string | null;
   created_by?: string;
   created_at: string;
 }

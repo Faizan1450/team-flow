@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           created_at: string
           days_earned: number
+          hours_earned: number | null
           hours_worked: number
           id: string
           reason: string
@@ -32,6 +33,7 @@ export type Database = {
         Insert: {
           created_at?: string
           days_earned: number
+          hours_earned?: number | null
           hours_worked: number
           id?: string
           reason: string
@@ -46,6 +48,7 @@ export type Database = {
         Update: {
           created_at?: string
           days_earned?: number
+          hours_earned?: number | null
           hours_worked?: number
           id?: string
           reason?: string
@@ -72,30 +75,42 @@ export type Database = {
           casual_leave_balance: number
           comp_off_balance: number
           created_at: string
+          earned_hours: number | null
           id: string
+          pending_hours: number | null
           sick_leave_balance: number
           teammate_id: string
+          total_hours: number | null
           updated_at: string
+          used_hours: number | null
           year: number
         }
         Insert: {
           casual_leave_balance?: number
           comp_off_balance?: number
           created_at?: string
+          earned_hours?: number | null
           id?: string
+          pending_hours?: number | null
           sick_leave_balance?: number
           teammate_id: string
+          total_hours?: number | null
           updated_at?: string
+          used_hours?: number | null
           year: number
         }
         Update: {
           casual_leave_balance?: number
           comp_off_balance?: number
           created_at?: string
+          earned_hours?: number | null
           id?: string
+          pending_hours?: number | null
           sick_leave_balance?: number
           teammate_id?: string
+          total_hours?: number | null
           updated_at?: string
+          used_hours?: number | null
           year?: number
         }
         Relationships: [
@@ -113,7 +128,9 @@ export type Database = {
           created_at: string
           days_count: number
           end_date: string
+          hours_requested: number | null
           id: string
+          is_partial: boolean | null
           leave_type: string
           reason: string | null
           requested_by: string | null
@@ -128,7 +145,9 @@ export type Database = {
           created_at?: string
           days_count: number
           end_date: string
+          hours_requested?: number | null
           id?: string
+          is_partial?: boolean | null
           leave_type: string
           reason?: string | null
           requested_by?: string | null
@@ -143,7 +162,9 @@ export type Database = {
           created_at?: string
           days_count?: number
           end_date?: string
+          hours_requested?: number | null
           id?: string
+          is_partial?: boolean | null
           leave_type?: string
           reason?: string | null
           requested_by?: string | null
@@ -355,7 +376,10 @@ export type Database = {
           created_at: string
           created_by: string | null
           date: string
+          hours: number | null
           id: string
+          is_approved_leave: boolean | null
+          leave_request_id: string | null
           reason: string | null
           teammate_id: string
         }
@@ -363,7 +387,10 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           date: string
+          hours?: number | null
           id?: string
+          is_approved_leave?: boolean | null
+          leave_request_id?: string | null
           reason?: string | null
           teammate_id: string
         }
@@ -371,11 +398,21 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           date?: string
+          hours?: number | null
           id?: string
+          is_approved_leave?: boolean | null
+          leave_request_id?: string | null
           reason?: string | null
           teammate_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "time_off_leave_request_id_fkey"
+            columns: ["leave_request_id"]
+            isOneToOne: false
+            referencedRelation: "leave_requests"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "time_off_teammate_id_fkey"
             columns: ["teammate_id"]
@@ -437,6 +474,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      get_available_leave_hours: {
+        Args: { _teammate_id: string }
+        Returns: number
+      }
       get_teammate_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
@@ -456,6 +497,14 @@ export type Database = {
             }
             Returns: undefined
           }
+      reject_comp_off_request: {
+        Args: { _request_id: string }
+        Returns: undefined
+      }
+      reject_leave_request: {
+        Args: { _request_id: string }
+        Returns: undefined
+      }
       reject_registration: { Args: { _pending_id: string }; Returns: undefined }
     }
     Enums: {

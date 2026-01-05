@@ -15,7 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { SettingsModal } from '@/components/settings/SettingsModal';
-import { LayoutGrid, Users, Settings, LogOut, Bell } from 'lucide-react';
+import { LayoutGrid, Users, Settings, LogOut, Bell, CalendarDays } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function Header() {
@@ -130,6 +130,10 @@ export function Header() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => navigate('/leave')} className="cursor-pointer rounded-lg">
+                <CalendarDays className="mr-2 h-4 w-4" />
+                Leave Management
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setSettingsOpen(true)} className="cursor-pointer rounded-lg">
                 <Settings className="mr-2 h-4 w-4" />
                 Settings
