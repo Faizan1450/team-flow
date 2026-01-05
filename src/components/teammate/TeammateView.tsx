@@ -20,6 +20,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMyTeammateProfile } from '@/hooks/useTeammates';
 import { useTasks, useCreateTask, useUpdateTask, useUpdateTaskOrder } from '@/hooks/useTasks';
+import { useTimeOff } from '@/hooks/useTimeOff';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -29,7 +30,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Clock, User, Calendar, Plus, GripVertical, CheckCircle, Loader2, PlayCircle, Circle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Clock, User, Calendar, Plus, GripVertical, CheckCircle, Loader2, PlayCircle, Circle, ChevronLeft, ChevronRight, CalendarOff } from 'lucide-react';
 import { calculateDayCapacity, getCapacityPercentage, getCapacityStatus } from '@/lib/capacity';
 import { cn } from '@/lib/utils';
 import { Task } from '@/types';
@@ -113,6 +114,7 @@ export function TeammateView() {
   const { authUser } = useAuth();
   const { data: myProfile, isLoading: loadingProfile } = useMyTeammateProfile();
   const { data: allTasks = [], isLoading: loadingTasks } = useTasks();
+  const { data: timeOff = [] } = useTimeOff();
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
   const updateTaskOrder = useUpdateTaskOrder();
@@ -133,7 +135,14 @@ export function TeammateView() {
   const percentage = capacity ? getCapacityPercentage(capacity) : 0;
   const status = capacity ? getCapacityStatus(capacity) : 'empty';
   const tasksForSelectedDay = useMemo(() => myTasks.filter((t) => t.date === selectedDateStr).sort((a, b) => a.sort_order - b.sort_order), [myTasks, selectedDateStr]);
-
+  
+  // Get approved leave for selected date
+  const approvedLeaveForDay = useMemo(() => {
+    if (!myProfile) return null;
+    return timeOff.find(
+      (t) => t.teammate_id === myProfile.id && t.date === selectedDateStr && t.is_approved_leave
+    );
+  }, [timeOff, myProfile?.id, selectedDateStr]);
   const goToPreviousWeek = () => {
     const newStart = subDays(weekStartDate, 7);
     setWeekStartDate(newStart);
@@ -229,15 +238,49 @@ export function TeammateView() {
         <Card className="lg:col-span-2 shadow-card rounded-2xl">
           <CardHeader className="pb-2"><div className="flex items-center justify-between"><CardTitle className="text-base">Tasks for this day</CardTitle><span className="text-xs text-muted-foreground">Drag to reorder</span></div></CardHeader>
           <CardContent>
-            {tasksForSelectedDay.length === 0 ? (
+            {tasksForSelectedDay.length === 0 && !approvedLeaveForDay ? (
               <div className="flex flex-col items-center justify-center py-12 text-muted-foreground"><Clock className="h-12 w-12 mb-3 opacity-30" /><p className="text-sm font-medium">No tasks scheduled</p></div>
             ) : (
               <ScrollArea className="h-[300px] pr-4">
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                  <SortableContext items={tasksForSelectedDay.map(t => t.id)} strategy={verticalListSortingStrategy}>
-                    <div className="space-y-3">{tasksForSelectedDay.map((task) => <SortableTaskCard key={task.id} task={task} onMarkComplete={handleStatusChange} />)}</div>
-                  </SortableContext>
-                </DndContext>
+                <div className="space-y-3">
+                  {/* Approved Leave Block */}
+                  {approvedLeaveForDay && (
+                    <div className="p-4 rounded-xl border-2 border-amber-500/50 bg-amber-500/10 shadow-card">
+                      <div className="flex items-start gap-3">
+                        <div className="mt-1 text-amber-500">
+                          <CalendarOff className="h-4 w-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="space-y-1 min-w-0 flex-1">
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-semibold text-amber-700 dark:text-amber-300">Approved Leave</h4>
+                                <Badge className="shrink-0 rounded-lg bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/50">Leave</Badge>
+                              </div>
+                              {approvedLeaveForDay.reason && (
+                                <p className="text-sm text-amber-600/80 dark:text-amber-400/80">{approvedLeaveForDay.reason}</p>
+                              )}
+                            </div>
+                            <Badge variant="secondary" className="rounded-lg bg-amber-500/20 text-amber-700 dark:text-amber-300">
+                              <Clock className="h-3 w-3 mr-1" />{approvedLeaveForDay.hours || myProfile.daily_capacity}h
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-1 mt-3 text-xs text-amber-600/70 dark:text-amber-400/70">
+                            <CalendarOff className="h-3 w-3" />
+                            Time blocked for approved leave
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Tasks */}
+                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                    <SortableContext items={tasksForSelectedDay.map(t => t.id)} strategy={verticalListSortingStrategy}>
+                      {tasksForSelectedDay.map((task) => <SortableTaskCard key={task.id} task={task} onMarkComplete={handleStatusChange} />)}
+                    </SortableContext>
+                  </DndContext>
+                </div>
               </ScrollArea>
             )}
           </CardContent>
